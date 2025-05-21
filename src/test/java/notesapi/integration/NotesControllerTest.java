@@ -16,9 +16,9 @@ public class NotesControllerTest {
 
     @Test
     void should_return_ok_when_getting_note_by_id() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/notes", String.class);
+        ResponseEntity<String> response = restTemplate.getForEntity("/notes/any_id", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo("Here's a note");
+        assertThat(response.getBody()).isEqualTo("Here's a note with id: any_id");
     }
 }
