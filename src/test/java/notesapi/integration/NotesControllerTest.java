@@ -42,4 +42,22 @@ public class NotesControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
     }
+
+    @Test
+    void should_return_ok_when_deleting_note_by_id() {
+        Note savedNote = noteRepository.save(new Note());
+        ResponseEntity<Void> response = restTemplate.exchange("/notes/" + savedNote.getId(), HttpMethod.DELETE, null, Void.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNull();
+        assertThat(noteRepository.findById(savedNote.getId())).isEmpty();
+    }
+
+    @Test
+    void should_return_not_found_when_deleting_unexistent_note() {
+        ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.DELETE, null, String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
+    }
 }

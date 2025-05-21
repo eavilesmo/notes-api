@@ -17,4 +17,9 @@ public class NoteService {
     public Note findById(String id) {
         return noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
     }
+
+    public void deleteById(String id) {
+        Note note = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
+        noteRepository.deleteById(note.getId());
+    }
 }

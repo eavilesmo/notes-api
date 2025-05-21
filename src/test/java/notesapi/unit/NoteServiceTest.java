@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,5 +41,24 @@ public class NoteServiceTest {
         when(noteRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.findById(id)).isInstanceOf(NoteNotFoundException.class);
+    }
+
+    @Test
+    public void should_delete_note_by_id() {
+        Note savedNote = new Note();
+        savedNote.setId("any_id");
+        when(noteRepository.findById("any_id")).thenReturn(Optional.of(savedNote));
+
+        noteService.deleteById("any_id");
+
+        verify(noteRepository).deleteById("any_id");
+    }
+
+    @Test
+    public void should_throw_not_found_exception_when_deleting_unexistent_note() {
+        String id = "any_id";
+        when(noteRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> noteService.deleteById(id)).isInstanceOf(NoteNotFoundException.class);
     }
 }
