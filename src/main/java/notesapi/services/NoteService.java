@@ -1,10 +1,9 @@
 package notesapi.services;
 
 import notesapi.entities.Note;
+import notesapi.exception.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class NoteService {
@@ -15,7 +14,7 @@ public class NoteService {
         this.noteRepository = noteRepository;
     }
 
-    public Optional<Note> findById(String id) {
-        return noteRepository.findById(id);
+    public Note findById(String id) {
+        return noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
     }
 }

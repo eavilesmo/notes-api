@@ -26,12 +26,20 @@ public class NotesControllerTest {
     }
 
     @Test
-    void should_return_note_when_getting_note_by_id() {
+    void should_return_ok_when_getting_note_by_id() {
         Note savedNote = noteRepository.save(new Note());
 
         ResponseEntity<Note> response = restTemplate.getForEntity("/notes/" + savedNote.getId(), Note.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+    }
+
+    @Test
+    void should_return_not_found_when_note_does_not_exist() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/notes/non-existent-id", String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
     }
 }
