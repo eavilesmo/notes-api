@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface NoteRepository {
 
     Optional<Note> findById(String id);
+    Note save(Note note);
+    void deleteAll();
 }

@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/notes")
 public class NotesController {
@@ -20,7 +22,10 @@ public class NotesController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Note> getNoteById(@PathVariable String id) {
-        Note note = noteService.findById(id);
-        return ResponseEntity.ok(note);
+        Optional<Note> note = noteService.findById(id);
+        if (note.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(note.get());
     }
 }
