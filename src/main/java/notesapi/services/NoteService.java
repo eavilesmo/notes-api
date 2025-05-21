@@ -5,6 +5,8 @@ import notesapi.exception.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class NoteService {
 
@@ -16,6 +18,10 @@ public class NoteService {
 
     public Note findById(String id) {
         return noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
+    }
+
+    public List<Note> findAll() {
+        return noteRepository.findAll();
     }
 
     public void deleteById(String id) {

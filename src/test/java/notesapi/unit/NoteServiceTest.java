@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +42,16 @@ public class NoteServiceTest {
         when(noteRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.findById(id)).isInstanceOf(NoteNotFoundException.class);
+    }
+
+    @Test
+    public void should_return_a_list_of_notes_when_getting_all_notes() {
+        List<Note> savedNotes = List.of(new Note(), new Note());
+        when(noteRepository.findAll()).thenReturn(savedNotes);
+
+        List<Note> expectedNotes = noteService.findAll();
+
+        assertThat(expectedNotes).usingRecursiveComparison().isEqualTo(savedNotes);
     }
 
     @Test

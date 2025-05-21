@@ -2,6 +2,7 @@ package notesapi.repositories;
 
 import notesapi.entities.Note;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface NoteRepository {
@@ -10,4 +11,5 @@ public interface NoteRepository {
     Note save(Note note);
     void deleteAll();
     void deleteById(String id);
+    List<Note> findAll();
 }

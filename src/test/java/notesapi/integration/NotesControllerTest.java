@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,6 +44,23 @@ public class NotesControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
+    }
+
+    @Test
+    void should_return_ok_when_getting_all_notes() {
+        noteRepository.save(new Note());
+        noteRepository.save(new Note());
+
+        ResponseEntity<List<Note>> response = restTemplate.exchange(
+                "/notes",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Note>>() {}
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().size()).isEqualTo(2);
     }
 
     @Test
