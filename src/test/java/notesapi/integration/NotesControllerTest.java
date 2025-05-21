@@ -1,5 +1,7 @@
 package notesapi.integration;
 
+import notesapi.entities.Note;
+import notesapi.services.NoteService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,10 +17,10 @@ public class NotesControllerTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    void should_return_ok_when_getting_note_by_id() {
-        ResponseEntity<String> response = restTemplate.getForEntity("/notes/any_id", String.class);
+    void should_return_note_when_getting_note_by_id() {
+        ResponseEntity<Note> response = restTemplate.getForEntity("/notes/any_id", Note.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo("Here's a note with id: any_id");
+        assertThat(response.getBody()).isNotNull();
     }
 }
