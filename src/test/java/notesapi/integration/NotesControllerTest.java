@@ -1,6 +1,7 @@
 package notesapi.integration;
 
 import notesapi.dtos.request.NoteRequest;
+import notesapi.dtos.response.NoteResponse;
 import notesapi.entities.Note;
 import notesapi.repositories.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,7 @@ public class NotesControllerTest {
     void should_return_ok_when_getting_note_by_id() {
         Note savedNote = noteRepository.save(new Note());
 
-        ResponseEntity<Note> response = restTemplate.getForEntity("/notes/" + savedNote.getId(), Note.class);
+        ResponseEntity<NoteResponse> response = restTemplate.getForEntity("/notes/" + savedNote.getId(), NoteResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -54,11 +55,11 @@ public class NotesControllerTest {
         noteRepository.save(new Note());
         noteRepository.save(new Note());
 
-        ResponseEntity<List<Note>> response = restTemplate.exchange(
+        ResponseEntity<List<NoteResponse>> response = restTemplate.exchange(
                 "/notes",
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<Note>>() {}
+                new ParameterizedTypeReference<List<NoteResponse>>() {}
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -77,11 +78,11 @@ public class NotesControllerTest {
         noteRepository.save(new Note());
 
         String keyword = "title";
-        ResponseEntity<List<Note>> response = restTemplate.exchange(
+        ResponseEntity<List<NoteResponse>> response = restTemplate.exchange(
                 "/notes/search?keyword=" + keyword,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<Note>>() {}
+                new ParameterizedTypeReference<List<NoteResponse>>() {}
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -96,21 +97,18 @@ public class NotesControllerTest {
         List<String> tags = List.of("tag1", "tag2");
         NoteRequest request = new NoteRequest(title, content, tags);
 
-        ResponseEntity<Note> response = restTemplate.postForEntity("/notes", request, Note.class);
+        ResponseEntity<NoteResponse> response = restTemplate.postForEntity("/notes", request, NoteResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        Note note = response.getBody();
-        assertThat(note.getTitle()).isEqualTo(title);
-        assertThat(note.getContent()).isEqualTo(content);
-        assertThat(note.getId()).isNotNull();
-        assertThat(note.getTags()).usingRecursiveComparison().isEqualTo(tags);
-        assertThat(note.getCreatedAt()).isNotNull();
-        assertThat(note.getUpdatedAt()).isNotNull();
 
         List<Note> savedNotes = noteRepository.findAll();
         assertThat(savedNotes).hasSize(1);
-        assertThat(savedNotes.getFirst().getTitle()).isEqualTo("title");
+        assertThat(savedNotes.getFirst().getTitle()).isEqualTo(title);
+        assertThat(savedNotes.getFirst().getContent()).isEqualTo(content);
+        assertThat(savedNotes.getFirst().getTags()).usingRecursiveComparison().isEqualTo(tags);
+        assertThat(savedNotes.getFirst().getCreatedAt()).isNotNull();
+        assertThat(savedNotes.getFirst().getUpdatedAt()).isNotNull();
     }
 
     @Test
@@ -125,7 +123,7 @@ public class NotesControllerTest {
         List<String> updatedTags = List.of("updated-tag1", "updated-tag2");
         NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
 
-        ResponseEntity<Note> response = restTemplate.exchange("/notes/" + note.getId(), HttpMethod.PUT, new HttpEntity<>(request), Note.class);
+        ResponseEntity<NoteResponse> response = restTemplate.exchange("/notes/" + note.getId(), HttpMethod.PUT, new HttpEntity<>(request), NoteResponse.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();

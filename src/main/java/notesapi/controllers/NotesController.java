@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import notesapi.dtos.request.NoteRequest;
+import notesapi.dtos.response.NoteResponse;
 import notesapi.entities.Note;
 import notesapi.services.NoteService;
 import org.springframework.http.ResponseEntity;
@@ -32,37 +33,37 @@ public class NotesController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get note by ID")
-    public ResponseEntity<Note> getNoteById(@PathVariable String id) {
-        Note note = noteService.findById(id);
-        return ResponseEntity.ok(note);
+    public ResponseEntity<NoteResponse> getNoteById(@PathVariable String id) {
+        NoteResponse response = NoteResponse.from(noteService.findById(id));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
     @Operation(summary = "Get all notes")
-    public ResponseEntity<List<Note>> getAllNotes() {
-        List<Note> notes = noteService.findAll();
-        return ResponseEntity.ok(notes);
+    public ResponseEntity<List<NoteResponse>> getAllNotes() {
+        List<NoteResponse> response = noteService.findAll().stream().map(NoteResponse::from).toList();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search note by keyword")
-    public ResponseEntity<List<Note>> searchNotes(@RequestParam String keyword) {
-        List<Note> notes = noteService.search(keyword);
-        return ResponseEntity.ok(notes);
+    public ResponseEntity<List<NoteResponse>> searchNotes(@RequestParam String keyword) {
+        List<NoteResponse> response = noteService.search(keyword).stream().map(NoteResponse::from).toList();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
     @Operation(summary = "Create a note")
-    public ResponseEntity<Note> createNote(@Valid @RequestBody NoteRequest request) {
-        Note note = noteService.create(request);
-        return ResponseEntity.ok(note);
+    public ResponseEntity<NoteResponse> createNote(@Valid @RequestBody NoteRequest request) {
+        NoteResponse response = NoteResponse.from(noteService.create(request));
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update note")
-    public ResponseEntity<Note> updateNote(@Valid @RequestBody NoteRequest request, @PathVariable String id) {
-        Note note = noteService.update(request, id);
-        return ResponseEntity.ok(note);
+    public ResponseEntity<NoteResponse> updateNote(@Valid @RequestBody NoteRequest request, @PathVariable String id) {
+        NoteResponse response = NoteResponse.from(noteService.update(request, id));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
