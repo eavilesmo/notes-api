@@ -11,7 +11,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,6 +88,38 @@ public class NotesControllerTest {
         assertThat(savedNotes.getFirst().getTitle()).isEqualTo("title");
     }
 
+    @Test
+    void should_return_ok_when_updating_a_note() {
+        Note note = new Note();
+        note.setTitle("old title");
+        note.setContent("old content");
+        noteRepository.save(note);
+
+        String updatedTitle = "new title";
+        String updatedContent = "new content";
+        NoteRequest request = new NoteRequest(updatedTitle, updatedContent);
+
+        ResponseEntity<Note> response = restTemplate.exchange("/notes/" + note.getId(), HttpMethod.PUT, new HttpEntity<>(request), Note.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        Optional<Note> updatedNote = noteRepository.findById(note.getId());
+        assertThat(updatedNote).isPresent();
+        assertThat(updatedNote.get().getTitle()).isEqualTo(updatedTitle);
+        assertThat(updatedNote.get().getContent()).isEqualTo(updatedContent);
+        assertThat(updatedNote.get().getCreatedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(note.getCreatedAt().truncatedTo(ChronoUnit.MILLIS));
+        assertThat(updatedNote.get().getUpdatedAt().truncatedTo(ChronoUnit.MILLIS)).isNotEqualTo(note.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS));
+    }
+
+    @Test
+    void should_return_not_found_when_updating_unexistent_note() {
+        NoteRequest request = new NoteRequest("any-title", "any-content");
+        ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.PUT, new HttpEntity<>(request), String.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
+    }
 
     @Test
     void should_return_ok_when_deleting_note_by_id() {

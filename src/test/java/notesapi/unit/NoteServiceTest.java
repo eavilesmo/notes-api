@@ -70,6 +70,37 @@ public class NoteServiceTest {
     }
 
     @Test
+    void should_return_updated_note_when_updating_a_note() {
+        Note note = new Note();
+        note.setId("any_id");
+        note.setTitle("old title");
+        note.setContent("old content");
+        when(noteRepository.findById("any_id")).thenReturn(Optional.of(note));
+
+        String updatedTitle = "new title";
+        String updatedContent = "new content";
+
+        note.setTitle(updatedTitle);
+        note.setContent(updatedContent);
+        when(noteRepository.save(any())).thenReturn(note);
+
+        NoteRequest request = new NoteRequest(updatedTitle, updatedContent);
+        Note updatedNote = noteService.update(request, "any_id");
+
+        assertThat(updatedNote.getTitle()).isEqualTo(updatedTitle);
+        assertThat(updatedNote.getContent()).isEqualTo(updatedContent);
+    }
+
+    @Test
+    public void should_throw_not_found_exception_when_updating_unexistent_note() {
+        String id = "any_id";
+        NoteRequest request = new NoteRequest("any-title", "any-content");
+        when(noteRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> noteService.update(request, id)).isInstanceOf(NoteNotFoundException.class);
+    }
+
+    @Test
     public void should_delete_note_by_id() {
         Note savedNote = new Note();
         savedNote.setId("any_id");

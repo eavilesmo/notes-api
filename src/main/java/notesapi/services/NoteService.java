@@ -32,6 +32,14 @@ public class NoteService {
         return noteRepository.save(note);
     }
 
+    public Note update(NoteRequest request, String id) {
+        Note note = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
+        note.setTitle(request.getTitle());
+        note.setContent(request.getContent());
+        note.refreshUpdatedAt();
+        return noteRepository.save(note);
+    }
+
     public void deleteById(String id) {
         Note note = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
         noteRepository.deleteById(note.getId());

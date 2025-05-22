@@ -51,4 +51,8 @@ public class Note {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    public void refreshUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
