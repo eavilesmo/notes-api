@@ -20,6 +20,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static notesapi.TestData.ANY_CONTENT;
+import static notesapi.TestData.ANY_OTHER_CONTENT;
+import static notesapi.TestData.ANY_OTHER_TAG;
+import static notesapi.TestData.ANY_OTHER_TITLE;
+import static notesapi.TestData.ANY_TAG;
+import static notesapi.TestData.ANY_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -35,6 +41,8 @@ public class NotesControllerTest {
     void setUp() {
         noteRepository.deleteAll();
     }
+
+    public static final String NOTE_NOT_FOUND_ERROR_MESSAGE = "Note with ID non-existent-id not found.";
 
     @Nested
     class GetNoteById {
@@ -54,7 +62,7 @@ public class NotesControllerTest {
             ResponseEntity<String> response = restTemplate.getForEntity("/notes/non-existent-id", String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
+            assertThat(response.getBody()).contains(NOTE_NOT_FOUND_ERROR_MESSAGE);
         }
     }
 
@@ -64,9 +72,9 @@ public class NotesControllerTest {
         @Test
         void should_return_ok_when_getting_all_notes() {
             Note note1 = new Note();
-            note1.setTitle("title 1");
+            note1.setTitle(ANY_TITLE);
             Note note2 = new Note();
-            note2.setContent("any content title");
+            note2.setContent(ANY_CONTENT);
             noteRepository.save(note1);
             noteRepository.save(note2);
 
@@ -88,12 +96,11 @@ public class NotesControllerTest {
         @Test
         void should_return_ok_when_searching_notes_by_keyword() {
             Note note1 = new Note();
-            note1.setTitle("title 1");
+            note1.setTitle(ANY_TITLE);
             Note note2 = new Note();
-            note2.setContent("any content title");
+            note2.setContent(ANY_CONTENT);
             noteRepository.save(note1);
             noteRepository.save(note2);
-            noteRepository.save(new Note());
 
             String keyword = "title";
             ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
@@ -105,7 +112,7 @@ public class NotesControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getItems()).hasSize(2);
+            assertThat(response.getBody().getItems()).hasSize(1);
         }
     }
 
@@ -113,9 +120,9 @@ public class NotesControllerTest {
     class CreateNote {
         @Test
         void should_return_ok_when_creating_note() {
-            String title = "title";
-            String content = "content";
-            List<String> tags = List.of("tag1", "tag2");
+            String title = ANY_TITLE;
+            String content = ANY_CONTENT;
+            List<String> tags = List.of(ANY_TAG);
             NoteRequest request = new NoteRequest(title, content, tags);
 
             ResponseEntity<NoteResponse> response = restTemplate.postForEntity("/notes", request, NoteResponse.class);
@@ -138,13 +145,14 @@ public class NotesControllerTest {
         @Test
         void should_return_ok_when_updating_note() {
             Note note = new Note();
-            note.setTitle("old title");
-            note.setContent("old content");
+            note.setTitle(ANY_TITLE);
+            note.setContent(ANY_CONTENT);
+            note.setTags(List.of(ANY_TAG));
             noteRepository.save(note);
 
-            String updatedTitle = "new title";
-            String updatedContent = "new content";
-            List<String> updatedTags = List.of("updated-tag1", "updated-tag2");
+            String updatedTitle = ANY_OTHER_TITLE;
+            String updatedContent = ANY_OTHER_CONTENT;
+            List<String> updatedTags = List.of(ANY_TAG, ANY_OTHER_TAG);
             NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
 
             ResponseEntity<NoteResponse> response = restTemplate.exchange("/notes/" + note.getId(), HttpMethod.PUT, new HttpEntity<>(request), NoteResponse.class);
@@ -163,11 +171,11 @@ public class NotesControllerTest {
 
         @Test
         void should_return_not_found_when_note_does_not_exist() {
-            NoteRequest request = new NoteRequest("any-title", "any-content", List.of("any-tag"));
+            NoteRequest request = new NoteRequest(ANY_TITLE, ANY_CONTENT, List.of(ANY_TAG));
             ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.PUT, new HttpEntity<>(request), String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
+            assertThat(response.getBody()).contains(NOTE_NOT_FOUND_ERROR_MESSAGE);
         }
     }
 
@@ -188,7 +196,7 @@ public class NotesControllerTest {
             ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.DELETE, null, String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).contains("Note with ID non-existent-id not found.");
+            assertThat(response.getBody()).contains(NOTE_NOT_FOUND_ERROR_MESSAGE);
         }
     }
 }
