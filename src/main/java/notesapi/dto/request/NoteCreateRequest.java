@@ -1,4 +1,4 @@
-package notesapi.dto;
+package notesapi.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 

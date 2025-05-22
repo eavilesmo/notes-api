@@ -1,4 +1,4 @@
-package notesapi.dto;
+package notesapi.dto.response;
 
 public record ErrorResponse(
         String error,

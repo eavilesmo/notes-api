@@ -1,6 +1,6 @@
 package notesapi.unit;
 
-import notesapi.dto.NoteCreateRequest;
+import notesapi.dto.request.NoteCreateRequest;
 import notesapi.entities.Note;
 import notesapi.exception.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;

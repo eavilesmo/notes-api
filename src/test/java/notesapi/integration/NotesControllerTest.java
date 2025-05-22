@@ -1,6 +1,6 @@
 package notesapi.integration;
 
-import notesapi.dto.NoteCreateRequest;
+import notesapi.dto.request.NoteCreateRequest;
 import notesapi.entities.Note;
 import notesapi.repositories.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;

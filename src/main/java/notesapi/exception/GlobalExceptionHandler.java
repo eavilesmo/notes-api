@@ -1,8 +1,8 @@
 package notesapi.exception;
 
-import notesapi.dto.ErrorResponse;
-import notesapi.dto.FieldValidationError;
-import notesapi.dto.ValidationErrorResponse;
+import notesapi.dto.response.ErrorResponse;
+import notesapi.dto.response.FieldValidationError;
+import notesapi.dto.response.ValidationErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;

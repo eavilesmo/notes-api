@@ -1,4 +1,4 @@
-package notesapi.dto;
+package notesapi.dto.response;
 
 import java.util.List;
 
