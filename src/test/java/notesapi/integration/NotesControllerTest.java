@@ -50,7 +50,7 @@ public class NotesControllerTest {
         }
 
         @Test
-        void should_return_not_found_when_getting_unexistent_note() {
+        void should_return_not_found_when_note_does_not_exist() {
             ResponseEntity<String> response = restTemplate.getForEntity("/notes/non-existent-id", String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -162,7 +162,7 @@ public class NotesControllerTest {
         }
 
         @Test
-        void should_return_not_found_when_updating_unexistent_note() {
+        void should_return_not_found_when_note_does_not_exist() {
             NoteRequest request = new NoteRequest("any-title", "any-content", List.of("any-tag"));
             ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.PUT, new HttpEntity<>(request), String.class);
 
@@ -184,7 +184,7 @@ public class NotesControllerTest {
         }
 
         @Test
-        void should_return_not_found_when_deleting_unexistent_note() {
+        void should_return_not_found_when_note_does_not_exist() {
             ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.DELETE, null, String.class);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
