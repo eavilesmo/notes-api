@@ -47,7 +47,7 @@ public class NoteServiceTest {
 
         @Test
         public void should_find_note_by_id() {
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(new Note()));
+            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(createNote()));
 
             Note expectedNote = noteService.findById(ANY_ID);
 
@@ -80,6 +80,18 @@ public class NoteServiceTest {
             assertThat(expectedPage.getTotalElements()).isEqualTo(1);
             assertThat(expectedPage.getContent()).containsExactly(note);
         }
+
+        @Test
+        public void should_return_empty_page_when_there_are_no_notes() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Note> page = new PageImpl<>(List.of(), pageable, 0);
+            when(noteRepository.findAll(pageable)).thenReturn(page);
+
+            Page<Note> expectedPage = noteService.findAll(pageable);
+
+            assertThat(expectedPage.getContent()).isEmpty();
+            assertThat(expectedPage.getTotalElements()).isEqualTo(0);
+        }
     }
 
     @Nested
@@ -99,6 +111,19 @@ public class NoteServiceTest {
             assertThat(expectedPage.getContent()).hasSize(1);
             assertThat(expectedPage.getTotalElements()).isEqualTo(1);
             assertThat(expectedPage.getContent()).containsExactly(note);
+        }
+
+        @Test
+        public void should_return_empty_page_when_there_are_no_results() {
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Note> page = new PageImpl<>(List.of(), pageable, 0);
+            String keyword = "title";
+            when(noteRepository.search(pageable, keyword)).thenReturn(page);
+
+            Page<Note> expectedPage = noteService.search(pageable, keyword);
+
+            assertThat(expectedPage.getContent()).isEmpty();
+            assertThat(expectedPage.getTotalElements()).isEqualTo(0);
         }
     }
 

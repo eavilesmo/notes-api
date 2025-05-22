@@ -86,6 +86,20 @@ public class NotesControllerTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getItems()).hasSize(1);
         }
+
+        @Test
+        void should_return_ok_when_there_are_no_notes() {
+            ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
+                    "/notes",
+                    HttpMethod.GET,
+                    null,
+                    PaginatedResponse.class
+            );
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getItems()).isEmpty();
+        }
     }
 
     @Nested
@@ -106,6 +120,21 @@ public class NotesControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getItems()).hasSize(1);
+        }
+
+        @Test
+        void should_return_ok_when_there_are_no_results() {
+            String keyword = "title";
+            ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
+                    "/notes/search?keyword=" + keyword,
+                    HttpMethod.GET,
+                    null,
+                    PaginatedResponse.class
+            );
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getItems()).isEmpty();
         }
     }
 
