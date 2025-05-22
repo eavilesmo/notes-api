@@ -58,10 +58,11 @@ public class NoteServiceTest {
 
     @Test
     void should_return_a_new_note_when_creating_a_note() {
-        NoteRequest request = new NoteRequest("title", "content");
+        NoteRequest request = new NoteRequest("title", "content", List.of("tag1", "tag2"));
         Note expectedNote = new Note();
         expectedNote.setTitle(request.getTitle());
         expectedNote.setContent(request.getContent());
+        expectedNote.setTags(request.getTags());
         when(noteRepository.save(any())).thenReturn(expectedNote);
 
         Note createdNote = noteService.create(request);
@@ -79,22 +80,25 @@ public class NoteServiceTest {
 
         String updatedTitle = "new title";
         String updatedContent = "new content";
+        List<String> updatedTags = List.of("updated-tag1", "updated-tag2");
 
         note.setTitle(updatedTitle);
         note.setContent(updatedContent);
+        note.setTags(updatedTags);
         when(noteRepository.save(any())).thenReturn(note);
 
-        NoteRequest request = new NoteRequest(updatedTitle, updatedContent);
+        NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
         Note updatedNote = noteService.update(request, "any_id");
 
         assertThat(updatedNote.getTitle()).isEqualTo(updatedTitle);
         assertThat(updatedNote.getContent()).isEqualTo(updatedContent);
+        assertThat(updatedNote.getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
     }
 
     @Test
     public void should_throw_not_found_exception_when_updating_unexistent_note() {
         String id = "any_id";
-        NoteRequest request = new NoteRequest("any-title", "any-content");
+        NoteRequest request = new NoteRequest("any-title", "any-content", List.of("any-tag"));
         when(noteRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> noteService.update(request, id)).isInstanceOf(NoteNotFoundException.class);

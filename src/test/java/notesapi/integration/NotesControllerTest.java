@@ -70,7 +70,8 @@ public class NotesControllerTest {
     void should_return_ok_when_creating_a_note() {
         String title = "title";
         String content = "content";
-        NoteRequest request = new NoteRequest(title, content);
+        List<String> tags = List.of("tag1", "tag2");
+        NoteRequest request = new NoteRequest(title, content, tags);
 
         ResponseEntity<Note> response = restTemplate.postForEntity("/notes", request, Note.class);
 
@@ -80,6 +81,7 @@ public class NotesControllerTest {
         assertThat(note.getTitle()).isEqualTo(title);
         assertThat(note.getContent()).isEqualTo(content);
         assertThat(note.getId()).isNotNull();
+        assertThat(note.getTags()).usingRecursiveComparison().isEqualTo(tags);
         assertThat(note.getCreatedAt()).isNotNull();
         assertThat(note.getUpdatedAt()).isNotNull();
 
@@ -97,7 +99,8 @@ public class NotesControllerTest {
 
         String updatedTitle = "new title";
         String updatedContent = "new content";
-        NoteRequest request = new NoteRequest(updatedTitle, updatedContent);
+        List<String> updatedTags = List.of("updated-tag1", "updated-tag2");
+        NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
 
         ResponseEntity<Note> response = restTemplate.exchange("/notes/" + note.getId(), HttpMethod.PUT, new HttpEntity<>(request), Note.class);
 
@@ -108,13 +111,14 @@ public class NotesControllerTest {
         assertThat(updatedNote).isPresent();
         assertThat(updatedNote.get().getTitle()).isEqualTo(updatedTitle);
         assertThat(updatedNote.get().getContent()).isEqualTo(updatedContent);
+        assertThat(updatedNote.get().getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
         assertThat(updatedNote.get().getCreatedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(note.getCreatedAt().truncatedTo(ChronoUnit.MILLIS));
         assertThat(updatedNote.get().getUpdatedAt().truncatedTo(ChronoUnit.MILLIS)).isNotEqualTo(note.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS));
     }
 
     @Test
     void should_return_not_found_when_updating_unexistent_note() {
-        NoteRequest request = new NoteRequest("any-title", "any-content");
+        NoteRequest request = new NoteRequest("any-title", "any-content", List.of("any-tag"));
         ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.PUT, new HttpEntity<>(request), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);

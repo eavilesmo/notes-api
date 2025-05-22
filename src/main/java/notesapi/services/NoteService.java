@@ -29,6 +29,7 @@ public class NoteService {
         Note note = new Note();
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
+        note.setTags(request.getTags());
         return noteRepository.save(note);
     }
 
@@ -36,6 +37,7 @@ public class NoteService {
         Note note = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
+        note.setTags(request.getTags());
         note.refreshUpdatedAt();
         return noteRepository.save(note);
     }
