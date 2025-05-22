@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @AllArgsConstructor
 public class NoteService {
@@ -28,20 +30,25 @@ public class NoteService {
     }
 
     public Note create(NoteRequest request) {
-        Note note = new Note();
-        note.setTitle(request.title());
-        note.setContent(request.content());
-        note.setTags(request.tags());
+        Note note = Note.builder()
+                .title(request.title())
+                .content(request.content())
+                .tags(request.tags())
+                .build();
         return noteRepository.save(note);
     }
 
     public Note update(NoteRequest request, String id) {
         Note note = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
-        note.setTitle(request.title());
-        note.setContent(request.content());
-        note.setTags(request.tags());
-        note.refreshUpdatedAt();
-        return noteRepository.save(note);
+        Note updatedNote = Note.builder()
+                .id(note.getId())
+                .title(request.title())
+                .content(request.content())
+                .tags(request.tags())
+                .createdAt(note.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        return noteRepository.save(updatedNote);
     }
 
     public void deleteById(String id) {

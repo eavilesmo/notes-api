@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,11 +68,8 @@ public class NoteServiceTest {
 
         @Test
         public void should_return_page_of_notes_when_getting_all_notes() {
-            Note note1 = new Note();
-            note1.setId(ANY_ID);
-            note1.setTitle(ANY_TITLE);
-            note1.setContent(ANY_CONTENT);
-            List<Note> notes = List.of(note1);
+            Note note = createNote();
+            List<Note> notes = List.of(note);
             Pageable pageable = PageRequest.of(0, 10);
             Page<Note> page = new PageImpl<>(notes, pageable, notes.size());
             when(noteRepository.findAll(pageable)).thenReturn(page);
@@ -80,7 +78,7 @@ public class NoteServiceTest {
 
             assertThat(expectedPage.getContent()).hasSize(1);
             assertThat(expectedPage.getTotalElements()).isEqualTo(1);
-            assertThat(expectedPage.getContent()).containsExactly(note1);
+            assertThat(expectedPage.getContent()).containsExactly(note);
         }
     }
 
@@ -89,11 +87,8 @@ public class NoteServiceTest {
 
         @Test
         public void should_return_page_of_notes_when_searching_notes_by_keyword() {
-            Note note1 = new Note();
-            note1.setId(ANY_ID);
-            note1.setTitle(ANY_TITLE);
-            note1.setContent(ANY_CONTENT);
-            List<Note> notes = List.of(note1);
+            Note note = createNote();
+            List<Note> notes = List.of(note);
             Pageable pageable = PageRequest.of(0, 10);
             Page<Note> page = new PageImpl<>(notes, pageable, notes.size());
             String keyword = "title";
@@ -103,7 +98,7 @@ public class NoteServiceTest {
 
             assertThat(expectedPage.getContent()).hasSize(1);
             assertThat(expectedPage.getTotalElements()).isEqualTo(1);
-            assertThat(expectedPage.getContent()).containsExactly(note1);
+            assertThat(expectedPage.getContent()).containsExactly(note);
         }
     }
 
@@ -112,11 +107,8 @@ public class NoteServiceTest {
 
         @Test
         void should_return_new_note_when_creating_note() {
-            NoteRequest request = new NoteRequest(ANY_TITLE, ANY_CONTENT, List.of(ANY_TAG, ANY_OTHER_TAG));
-            Note expectedNote = new Note();
-            expectedNote.setTitle(request.title());
-            expectedNote.setContent(request.content());
-            expectedNote.setTags(request.tags());
+            NoteRequest request = new NoteRequest(ANY_TITLE, ANY_CONTENT, List.of(ANY_TAG));
+            Note expectedNote = createNote();
             when(noteRepository.save(any())).thenReturn(expectedNote);
 
             Note createdNote = noteService.create(request);
@@ -130,28 +122,26 @@ public class NoteServiceTest {
 
         @Test
         void should_return_updated_note_when_updating_note() {
-            Note note = new Note();
-            note.setId(ANY_ID);
-            note.setTitle(ANY_TITLE);
-            note.setContent(ANY_CONTENT);
-            note.setTags(List.of(ANY_TAG));
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(note));
+            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(createNote()));
 
             String updatedTitle = ANY_OTHER_TITLE;
             String updatedContent = ANY_OTHER_CONTENT;
             List<String> updatedTags = List.of(ANY_TAG, ANY_OTHER_TAG);
+            Note updatedNote = Note.builder()
+                    .id(ANY_ID)
+                    .title(updatedTitle)
+                    .content(updatedContent)
+                    .tags(updatedTags)
+                    .build();
 
-            note.setTitle(updatedTitle);
-            note.setContent(updatedContent);
-            note.setTags(updatedTags);
-            when(noteRepository.save(any())).thenReturn(note);
+            when(noteRepository.save(any())).thenReturn(updatedNote);
 
             NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
-            Note updatedNote = noteService.update(request, ANY_ID);
+            Note note = noteService.update(request, ANY_ID);
 
-            assertThat(updatedNote.getTitle()).isEqualTo(updatedTitle);
-            assertThat(updatedNote.getContent()).isEqualTo(updatedContent);
-            assertThat(updatedNote.getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
+            assertThat(note.getTitle()).isEqualTo(updatedTitle);
+            assertThat(note.getContent()).isEqualTo(updatedContent);
+            assertThat(note.getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
         }
 
         @Test
@@ -169,9 +159,7 @@ public class NoteServiceTest {
 
         @Test
         public void should_delete_note_by_id() {
-            Note savedNote = new Note();
-            savedNote.setId(ANY_ID);
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(savedNote));
+            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(createNote()));
 
             noteService.deleteById(ANY_ID);
 
@@ -185,5 +173,16 @@ public class NoteServiceTest {
 
             assertThatThrownBy(() -> noteService.deleteById(id)).isInstanceOf(NoteNotFoundException.class);
         }
+    }
+
+    private Note createNote() {
+        return Note.builder()
+                .id(ANY_ID)
+                .title(ANY_TITLE)
+                .content(ANY_CONTENT)
+                .tags(List.of(ANY_TAG))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
     }
 }
