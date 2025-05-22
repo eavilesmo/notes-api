@@ -4,6 +4,8 @@ import notesapi.dtos.request.NoteRequest;
 import notesapi.entities.Note;
 import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,8 +23,8 @@ public class NoteService {
         return noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
     }
 
-    public List<Note> findAll() {
-        return noteRepository.findAll();
+    public Page<Note> findAll(Pageable pageable) {
+        return noteRepository.findAll(pageable);
     }
 
     public List<Note> search(String keyword) {

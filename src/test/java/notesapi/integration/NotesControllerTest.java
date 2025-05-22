@@ -2,6 +2,7 @@ package notesapi.integration;
 
 import notesapi.dtos.request.NoteRequest;
 import notesapi.dtos.response.NoteResponse;
+import notesapi.dtos.response.PaginatedResponse;
 import notesapi.entities.Note;
 import notesapi.repositories.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,19 +53,23 @@ public class NotesControllerTest {
 
     @Test
     void should_return_ok_when_getting_all_notes() {
-        noteRepository.save(new Note());
-        noteRepository.save(new Note());
+        Note note1 = new Note();
+        note1.setTitle("title 1");
+        Note note2 = new Note();
+        note2.setContent("any content title");
+        noteRepository.save(note1);
+        noteRepository.save(note2);
 
-        ResponseEntity<List<NoteResponse>> response = restTemplate.exchange(
+        ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
                 "/notes",
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<NoteResponse>>() {}
+                PaginatedResponse.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().size()).isEqualTo(2);
+        assertThat(response.getBody().getItems()).hasSize(2);
     }
 
     @Test
@@ -102,13 +107,13 @@ public class NotesControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
 
-        List<Note> savedNotes = noteRepository.findAll();
-        assertThat(savedNotes).hasSize(1);
-        assertThat(savedNotes.getFirst().getTitle()).isEqualTo(title);
-        assertThat(savedNotes.getFirst().getContent()).isEqualTo(content);
-        assertThat(savedNotes.getFirst().getTags()).usingRecursiveComparison().isEqualTo(tags);
-        assertThat(savedNotes.getFirst().getCreatedAt()).isNotNull();
-        assertThat(savedNotes.getFirst().getUpdatedAt()).isNotNull();
+        Optional<Note> savedNote = noteRepository.findById(response.getBody().id());
+        assertThat(savedNote).isPresent();
+        assertThat(savedNote.get().getTitle()).isEqualTo(title);
+        assertThat(savedNote.get().getContent()).isEqualTo(content);
+        assertThat(savedNote.get().getTags()).usingRecursiveComparison().isEqualTo(tags);
+        assertThat(savedNote.get().getCreatedAt()).isNotNull();
+        assertThat(savedNote.get().getUpdatedAt()).isNotNull();
     }
 
     @Test

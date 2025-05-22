@@ -10,6 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,13 +51,21 @@ public class NoteServiceTest {
     }
 
     @Test
-    public void should_return_a_list_of_notes_when_getting_all_notes() {
-        List<Note> savedNotes = List.of(new Note(), new Note());
-        when(noteRepository.findAll()).thenReturn(savedNotes);
+    public void should_return_a_page_of_notes_when_getting_all_notes() {
+        Note note1 = new Note();
+        note1.setId("any_id");
+        note1.setTitle("any title");
+        note1.setContent("any content");
+        List<Note> notes = List.of(note1);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Note> page = new PageImpl<>(notes, pageable, notes.size());
+        when(noteRepository.findAll(pageable)).thenReturn(page);
 
-        List<Note> expectedNotes = noteService.findAll();
+        Page<Note> expectedPage = noteService.findAll(pageable);
 
-        assertThat(expectedNotes).usingRecursiveComparison().isEqualTo(savedNotes);
+        assertThat(expectedPage.getContent()).hasSize(1);
+        assertThat(expectedPage.getTotalElements()).isEqualTo(1);
+        assertThat(expectedPage.getContent()).containsExactly(note1);
     }
 
     @Test
