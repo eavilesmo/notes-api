@@ -57,6 +57,18 @@ public class NoteServiceTest {
     }
 
     @Test
+    public void should_return_a_list_of_notes_when_searching_notes_by_keyword() {
+        Note note1 = new Note();
+        note1.setTitle("title 1");
+        String keyword = "title";
+        when(noteRepository.search(keyword)).thenReturn(List.of(note1));
+
+        List<Note> expectedNotes = noteService.search(keyword);
+
+        assertThat(expectedNotes).isEqualTo(List.of(note1));
+    }
+
+    @Test
     void should_return_a_new_note_when_creating_a_note() {
         NoteRequest request = new NoteRequest("title", "content", List.of("tag1", "tag2"));
         Note expectedNote = new Note();

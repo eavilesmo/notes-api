@@ -12,4 +12,5 @@ public interface NoteRepository {
     void deleteAll();
     void deleteById(String id);
     List<Note> findAll();
+    List<Note> search(String keyword);
 }

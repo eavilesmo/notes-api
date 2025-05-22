@@ -67,6 +67,29 @@ public class NotesControllerTest {
     }
 
     @Test
+    void should_return_list_of_notes_when_searching_by_keyword() {
+        Note note1 = new Note();
+        note1.setTitle("title 1");
+        Note note2 = new Note();
+        note2.setContent("any content title");
+        noteRepository.save(note1);
+        noteRepository.save(note2);
+        noteRepository.save(new Note());
+
+        String keyword = "title";
+        ResponseEntity<List<Note>> response = restTemplate.exchange(
+                "/notes/search?keyword=" + keyword,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Note>>() {}
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().size()).isEqualTo(2);
+    }
+
+    @Test
     void should_return_ok_when_creating_a_note() {
         String title = "title";
         String content = "content";

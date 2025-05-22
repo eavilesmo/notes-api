@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -40,6 +41,13 @@ public class NotesController {
     @Operation(summary = "Get all notes")
     public ResponseEntity<List<Note>> getAllNotes() {
         List<Note> notes = noteService.findAll();
+        return ResponseEntity.ok(notes);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Search note by keyword")
+    public ResponseEntity<List<Note>> searchNotes(@RequestParam String keyword) {
+        List<Note> notes = noteService.search(keyword);
         return ResponseEntity.ok(notes);
     }
 

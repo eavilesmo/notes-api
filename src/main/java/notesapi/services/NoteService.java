@@ -25,6 +25,10 @@ public class NoteService {
         return noteRepository.findAll();
     }
 
+    public List<Note> search(String keyword) {
+        return noteRepository.search(keyword);
+    }
+
     public Note create(NoteRequest request) {
         Note note = new Note();
         note.setTitle(request.getTitle());
