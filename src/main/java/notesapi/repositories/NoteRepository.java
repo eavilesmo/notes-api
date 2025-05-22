@@ -4,7 +4,6 @@ import notesapi.entities.Note;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface NoteRepository {
@@ -14,5 +13,5 @@ public interface NoteRepository {
     void deleteAll();
     void deleteById(String id);
     Page<Note> findAll(Pageable pageable);
-    List<Note> search(String keyword);
+    Page<Note> search(Pageable pageable, String keyword);
 }

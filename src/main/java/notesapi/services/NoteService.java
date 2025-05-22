@@ -8,8 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public class NoteService {
 
@@ -27,8 +25,8 @@ public class NoteService {
         return noteRepository.findAll(pageable);
     }
 
-    public List<Note> search(String keyword) {
-        return noteRepository.search(keyword);
+    public Page<Note> search(Pageable pageable, String keyword) {
+        return noteRepository.search(pageable, keyword);
     }
 
     public Note create(NoteRequest request) {

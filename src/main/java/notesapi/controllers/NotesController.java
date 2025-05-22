@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/notes")
 @Tag(name = "Notes", description = "API for managing notes")
@@ -56,9 +54,13 @@ public class NotesController {
 
     @GetMapping("/search")
     @Operation(summary = "Search note by keyword")
-    public ResponseEntity<List<NoteResponse>> searchNotes(@RequestParam String keyword) {
-        List<NoteResponse> response = noteService.search(keyword).stream().map(NoteResponse::from).toList();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<PaginatedResponse> searchNotes(@RequestParam String keyword, @PageableDefault(
+            page = 0,
+            size = 10,
+            sort = "createdAt",
+            direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<NoteResponse> page = noteService.search(pageable, keyword).map(NoteResponse::from);
+        return ResponseEntity.ok(new PaginatedResponse(page));
     }
 
     @PostMapping

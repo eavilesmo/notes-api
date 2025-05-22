@@ -69,15 +69,22 @@ public class NoteServiceTest {
     }
 
     @Test
-    public void should_return_a_list_of_notes_when_searching_notes_by_keyword() {
+    public void should_return_a_page_of_notes_when_searching_notes_by_keyword() {
         Note note1 = new Note();
-        note1.setTitle("title 1");
+        note1.setId("any_id");
+        note1.setTitle("any title");
+        note1.setContent("any content");
+        List<Note> notes = List.of(note1);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Note> page = new PageImpl<>(notes, pageable, notes.size());
         String keyword = "title";
-        when(noteRepository.search(keyword)).thenReturn(List.of(note1));
+        when(noteRepository.search(pageable, keyword)).thenReturn(page);
 
-        List<Note> expectedNotes = noteService.search(keyword);
+        Page<Note> expectedPage = noteService.search(pageable, keyword);
 
-        assertThat(expectedNotes).isEqualTo(List.of(note1));
+        assertThat(expectedPage.getContent()).hasSize(1);
+        assertThat(expectedPage.getTotalElements()).isEqualTo(1);
+        assertThat(expectedPage.getContent()).containsExactly(note1);
     }
 
     @Test

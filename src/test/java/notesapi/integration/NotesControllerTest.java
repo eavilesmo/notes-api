@@ -10,8 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -73,7 +75,7 @@ public class NotesControllerTest {
     }
 
     @Test
-    void should_return_list_of_notes_when_searching_by_keyword() {
+    void should_return_ok_when_searching_notes_by_keyword() {
         Note note1 = new Note();
         note1.setTitle("title 1");
         Note note2 = new Note();
@@ -83,16 +85,16 @@ public class NotesControllerTest {
         noteRepository.save(new Note());
 
         String keyword = "title";
-        ResponseEntity<List<NoteResponse>> response = restTemplate.exchange(
+        ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
                 "/notes/search?keyword=" + keyword,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<NoteResponse>>() {}
+                PaginatedResponse.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().size()).isEqualTo(2);
+        assertThat(response.getBody().getItems()).hasSize(2);
     }
 
     @Test
