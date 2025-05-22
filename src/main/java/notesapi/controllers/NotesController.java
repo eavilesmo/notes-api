@@ -3,7 +3,7 @@ package notesapi.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import notesapi.dtos.request.NoteCreateRequest;
+import notesapi.dtos.request.NoteRequest;
 import notesapi.entities.Note;
 import notesapi.services.NoteService;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +44,7 @@ public class NotesController {
 
     @PostMapping
     @Operation(summary = "Create a note")
-    public ResponseEntity<Note> createNote(@Valid @RequestBody NoteCreateRequest request) {
+    public ResponseEntity<Note> createNote(@Valid @RequestBody NoteRequest request) {
         Note note = noteService.create(request);
         return ResponseEntity.ok(note);
     }

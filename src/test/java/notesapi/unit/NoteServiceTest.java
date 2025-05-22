@@ -1,6 +1,6 @@
 package notesapi.unit;
 
-import notesapi.dtos.request.NoteCreateRequest;
+import notesapi.dtos.request.NoteRequest;
 import notesapi.entities.Note;
 import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
@@ -58,7 +58,7 @@ public class NoteServiceTest {
 
     @Test
     void should_return_a_new_note_when_creating_a_note() {
-        NoteCreateRequest request = new NoteCreateRequest("title", "content");
+        NoteRequest request = new NoteRequest("title", "content");
         Note expectedNote = new Note();
         expectedNote.setTitle(request.getTitle());
         expectedNote.setContent(request.getContent());

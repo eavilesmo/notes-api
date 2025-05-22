@@ -2,7 +2,7 @@ package notesapi.dtos.request;
 
 import jakarta.validation.constraints.NotEmpty;
 
-public class NoteCreateRequest {
+public class NoteRequest {
 
     @NotEmpty(message = "The title cannot be empty")
     private final String title;
@@ -10,7 +10,7 @@ public class NoteCreateRequest {
     @NotEmpty(message = "The content cannot be empty")
     private final String content;
 
-    public NoteCreateRequest(String title, String content) {
+    public NoteRequest(String title, String content) {
         this.title = title;
         this.content = content;
     }

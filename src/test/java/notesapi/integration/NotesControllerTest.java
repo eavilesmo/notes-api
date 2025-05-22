@@ -1,6 +1,6 @@
 package notesapi.integration;
 
-import notesapi.dtos.request.NoteCreateRequest;
+import notesapi.dtos.request.NoteRequest;
 import notesapi.entities.Note;
 import notesapi.repositories.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,10 +65,10 @@ public class NotesControllerTest {
     }
 
     @Test
-    void should_return_created_when_creating_a_note() {
+    void should_return_ok_when_creating_a_note() {
         String title = "title";
         String content = "content";
-        NoteCreateRequest request = new NoteCreateRequest(title, content);
+        NoteRequest request = new NoteRequest(title, content);
 
         ResponseEntity<Note> response = restTemplate.postForEntity("/notes", request, Note.class);
 

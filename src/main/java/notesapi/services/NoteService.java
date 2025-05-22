@@ -1,6 +1,6 @@
 package notesapi.services;
 
-import notesapi.dtos.request.NoteCreateRequest;
+import notesapi.dtos.request.NoteRequest;
 import notesapi.entities.Note;
 import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
@@ -25,7 +25,7 @@ public class NoteService {
         return noteRepository.findAll();
     }
 
-    public Note create(NoteCreateRequest request) {
+    public Note create(NoteRequest request) {
         Note note = new Note();
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
