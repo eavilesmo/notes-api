@@ -1,8 +1,8 @@
 package notesapi.services;
 
-import notesapi.dto.request.NoteCreateRequest;
+import notesapi.dtos.request.NoteCreateRequest;
 import notesapi.entities.Note;
-import notesapi.exception.NoteNotFoundException;
+import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
 import org.springframework.stereotype.Component;
 

@@ -3,7 +3,7 @@ package notesapi.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import notesapi.dto.request.NoteCreateRequest;
+import notesapi.dtos.request.NoteCreateRequest;
 import notesapi.entities.Note;
 import notesapi.services.NoteService;
 import org.springframework.http.ResponseEntity;
