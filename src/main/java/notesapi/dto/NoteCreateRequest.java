@@ -1,13 +1,13 @@
 package notesapi.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 
 public class NoteCreateRequest {
 
-    @NotNull(message = "The title cannot be empty")
+    @NotEmpty(message = "The title cannot be empty")
     private final String title;
 
-    @NotNull(message = "The content cannot be empty")
+    @NotEmpty(message = "The content cannot be empty")
     private final String content;
 
     public NoteCreateRequest(String title, String content) {
