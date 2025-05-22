@@ -1,5 +1,6 @@
 package notesapi.unit;
 
+import notesapi.dto.NoteCreateRequest;
 import notesapi.entities.Note;
 import notesapi.exception.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
@@ -15,6 +16,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,19 @@ public class NoteServiceTest {
         List<Note> expectedNotes = noteService.findAll();
 
         assertThat(expectedNotes).usingRecursiveComparison().isEqualTo(savedNotes);
+    }
+
+    @Test
+    void should_return_a_new_note_when_creating_a_note() {
+        NoteCreateRequest request = new NoteCreateRequest("title", "content");
+        Note expectedNote = new Note();
+        expectedNote.setTitle(request.getTitle());
+        expectedNote.setContent(request.getContent());
+        when(noteRepository.save(any())).thenReturn(expectedNote);
+
+        Note createdNote = noteService.create(request);
+
+        assertThat(createdNote).isEqualTo(expectedNote);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package notesapi.services;
 
+import notesapi.dto.NoteCreateRequest;
 import notesapi.entities.Note;
 import notesapi.exception.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
@@ -22,6 +23,13 @@ public class NoteService {
 
     public List<Note> findAll() {
         return noteRepository.findAll();
+    }
+
+    public Note create(NoteCreateRequest request) {
+        Note note = new Note();
+        note.setTitle(request.getTitle());
+        note.setContent(request.getContent());
+        return noteRepository.save(note);
     }
 
     public void deleteById(String id) {

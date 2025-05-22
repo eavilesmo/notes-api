@@ -1,5 +1,6 @@
 package notesapi.integration;
 
+import notesapi.dto.NoteCreateRequest;
 import notesapi.entities.Note;
 import notesapi.repositories.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +63,29 @@ public class NotesControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().size()).isEqualTo(2);
     }
+
+    @Test
+    void should_return_created_when_creating_a_note() {
+        String title = "title";
+        String content = "content";
+        NoteCreateRequest request = new NoteCreateRequest(title, content);
+
+        ResponseEntity<Note> response = restTemplate.postForEntity("/notes", request, Note.class);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        Note note = response.getBody();
+        assertThat(note.getTitle()).isEqualTo(title);
+        assertThat(note.getContent()).isEqualTo(content);
+        assertThat(note.getId()).isNotNull();
+        assertThat(note.getCreatedAt()).isNotNull();
+        assertThat(note.getUpdatedAt()).isNotNull();
+
+        List<Note> savedNotes = noteRepository.findAll();
+        assertThat(savedNotes).hasSize(1);
+        assertThat(savedNotes.getFirst().getTitle()).isEqualTo("title");
+    }
+
 
     @Test
     void should_return_ok_when_deleting_note_by_id() {
