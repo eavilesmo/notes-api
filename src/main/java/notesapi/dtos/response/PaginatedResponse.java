@@ -1,9 +1,13 @@
 package notesapi.dtos.response;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+@Getter
+@NoArgsConstructor
 public class PaginatedResponse {
     private List<NoteResponse> items;
     private int page;
@@ -17,27 +21,5 @@ public class PaginatedResponse {
         this.size = pageData.getSize();
         this.totalPages = pageData.getTotalPages();
         this.totalElements = pageData.getTotalElements();
-    }
-
-    public PaginatedResponse() {}
-
-    public long getTotalElements() {
-        return totalElements;
-    }
-
-    public int getTotalPages() {
-        return totalPages;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public int getPage() {
-        return page;
-    }
-
-    public List<NoteResponse> getItems() {
-        return items;
     }
 }

@@ -91,9 +91,9 @@ public class NoteServiceTest {
     void should_return_a_new_note_when_creating_a_note() {
         NoteRequest request = new NoteRequest("title", "content", List.of("tag1", "tag2"));
         Note expectedNote = new Note();
-        expectedNote.setTitle(request.getTitle());
-        expectedNote.setContent(request.getContent());
-        expectedNote.setTags(request.getTags());
+        expectedNote.setTitle(request.title());
+        expectedNote.setContent(request.content());
+        expectedNote.setTags(request.tags());
         when(noteRepository.save(any())).thenReturn(expectedNote);
 
         Note createdNote = noteService.create(request);
