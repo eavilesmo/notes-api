@@ -4,17 +4,17 @@ import lombok.AllArgsConstructor;
 import notesapi.entities.Note;
 import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
+import notesapi.utils.DateTimeProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
 public class NoteService {
 
     private NoteRepository noteRepository;
+    private DateTimeProvider dateTimeProvider;
 
     public Note findById(String id) {
         return noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
@@ -33,8 +33,8 @@ public class NoteService {
                 .title(note.getTitle())
                 .content(note.getContent())
                 .tags(note.getTags())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(dateTimeProvider.now())
+                .updatedAt(dateTimeProvider.now())
                 .build();
         return noteRepository.save(noteToSave);
     }
@@ -47,7 +47,7 @@ public class NoteService {
                 .content(note.getContent())
                 .tags(note.getTags())
                 .createdAt(savedNote.getCreatedAt())
-                .updatedAt(LocalDateTime.now())
+                .updatedAt(dateTimeProvider.now())
                 .build();
         return noteRepository.save(updatedNote);
     }

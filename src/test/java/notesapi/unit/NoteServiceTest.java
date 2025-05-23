@@ -4,9 +4,12 @@ import notesapi.entities.Note;
 import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
 import notesapi.services.NoteService;
+import notesapi.utils.DateTimeProvider;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +32,7 @@ import static notesapi.TestData.ANY_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,9 +41,13 @@ public class NoteServiceTest {
 
     @Mock
     private NoteRepository noteRepository;
-
+    @Mock
+    private DateTimeProvider dateTimeProvider;
     @InjectMocks
     private NoteService noteService;
+
+    @Captor
+    ArgumentCaptor<Note> noteCaptor;
 
     @Nested
     class FindById {
@@ -51,14 +59,19 @@ public class NoteServiceTest {
             Note expectedNote = noteService.findById(ANY_ID);
 
             assertThat(expectedNote).isNotNull();
+            assertThat(expectedNote.getId()).isEqualTo(ANY_ID);
+            assertThat(expectedNote.getTitle()).isEqualTo(ANY_TITLE);
+            assertThat(expectedNote.getContent()).isEqualTo(ANY_CONTENT);
+            assertThat(expectedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
+            assertThat(expectedNote.getCreatedAt()).isNotNull();
+            assertThat(expectedNote.getUpdatedAt()).isNotNull();
         }
 
         @Test
         public void should_throw_not_found_exception_when_note_does_not_exist() {
-            String id = ANY_ID;
-            when(noteRepository.findById(id)).thenReturn(Optional.empty());
+            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> noteService.findById(id)).isInstanceOf(NoteNotFoundException.class);
+            assertThatThrownBy(() -> noteService.findById(ANY_ID)).isInstanceOf(NoteNotFoundException.class);
         }
     }
 
@@ -130,18 +143,24 @@ public class NoteServiceTest {
     class Create {
 
         @Test
-        void should_return_new_note_when_creating_note() {
+        void should_create_note() {
+            LocalDateTime time = LocalDateTime.now();
+            when(dateTimeProvider.now()).thenReturn(time);
+
             Note noteToCreate = Note.builder()
                     .title(ANY_TITLE)
                     .content(ANY_CONTENT)
                     .tags(List.of(ANY_TAG))
                     .build();
-            Note expectedNote = createNote();
-            when(noteRepository.save(any())).thenReturn(expectedNote);
+            noteService.create(noteToCreate);
 
-            Note createdNote = noteService.create(noteToCreate);
-
-            assertThat(createdNote).isEqualTo(expectedNote);
+            verify(noteRepository).save(noteCaptor.capture());
+            Note savedNote = noteCaptor.getValue();
+            assertThat(savedNote.getTitle()).isEqualTo(ANY_TITLE);
+            assertThat(savedNote.getContent()).isEqualTo(ANY_CONTENT);
+            assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
+            assertThat(savedNote.getCreatedAt()).isEqualTo(time);
+            assertThat(savedNote.getUpdatedAt()).isEqualTo(time);
         }
     }
 
@@ -149,31 +168,27 @@ public class NoteServiceTest {
     class Update {
 
         @Test
-        void should_return_updated_note_when_updating_note() {
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(createNote()));
-
-            String updatedTitle = ANY_OTHER_TITLE;
-            String updatedContent = ANY_OTHER_CONTENT;
-            List<String> updatedTags = List.of(ANY_TAG, ANY_OTHER_TAG);
-            Note updatedNote = Note.builder()
-                    .id(ANY_ID)
-                    .title(updatedTitle)
-                    .content(updatedContent)
-                    .tags(updatedTags)
-                    .build();
-
-            when(noteRepository.save(any())).thenReturn(updatedNote);
+        void should_update_note() {
+            Note originalNote = createNote();
+            LocalDateTime updatedTime = LocalDateTime.now();
+            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(originalNote));
+            when(dateTimeProvider.now()).thenReturn(updatedTime);
 
             Note noteToUpdate = Note.builder()
-                    .title(updatedTitle)
-                    .content(updatedContent)
-                    .tags(updatedTags)
+                    .title(ANY_OTHER_TITLE)
+                    .content(ANY_OTHER_CONTENT)
+                    .tags(List.of(ANY_TAG, ANY_OTHER_TAG))
                     .build();
-            Note note = noteService.update(noteToUpdate, ANY_ID);
+            noteService.update(noteToUpdate, ANY_ID);
 
-            assertThat(note.getTitle()).isEqualTo(updatedTitle);
-            assertThat(note.getContent()).isEqualTo(updatedContent);
-            assertThat(note.getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
+            verify(noteRepository).save(noteCaptor.capture());
+            Note savedNote = noteCaptor.getValue();
+            assertThat(savedNote.getId()).isEqualTo(ANY_ID);
+            assertThat(savedNote.getTitle()).isEqualTo(ANY_OTHER_TITLE);
+            assertThat(savedNote.getContent()).isEqualTo(ANY_OTHER_CONTENT);
+            assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG, ANY_OTHER_TAG));
+            assertThat(savedNote.getCreatedAt()).isEqualTo(originalNote.getCreatedAt());
+            assertThat(savedNote.getUpdatedAt()).isEqualTo(updatedTime);
         }
 
         @Test
@@ -187,6 +202,7 @@ public class NoteServiceTest {
             when(noteRepository.findById(id)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> noteService.update(noteToUpdate, id)).isInstanceOf(NoteNotFoundException.class);
+            verify(noteRepository, never()).save(any());
         }
     }
 
@@ -204,10 +220,10 @@ public class NoteServiceTest {
 
         @Test
         public void should_throw_not_found_exception_when_note_does_not_exist() {
-            String id = ANY_ID;
-            when(noteRepository.findById(id)).thenReturn(Optional.empty());
+            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> noteService.deleteById(id)).isInstanceOf(NoteNotFoundException.class);
+            assertThatThrownBy(() -> noteService.deleteById(ANY_ID)).isInstanceOf(NoteNotFoundException.class);
+            verify(noteRepository, never()).deleteById(any());
         }
     }
 
