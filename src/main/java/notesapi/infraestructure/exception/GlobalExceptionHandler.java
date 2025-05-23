@@ -45,4 +45,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        String error = "The provided arguments are not correct";
+        String message = "The page number and size must be positive";
+        ErrorResponse response = new ErrorResponse(error, message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }
