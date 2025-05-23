@@ -66,14 +66,14 @@ public class NotesController {
     @PostMapping
     @Operation(summary = "Create a note")
     public ResponseEntity<NoteResponse> createNote(@Valid @RequestBody NoteRequest request) {
-        NoteResponse response = NoteResponse.from(noteService.create(request));
+        NoteResponse response = NoteResponse.from(noteService.create(request.toNote()));
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update note")
     public ResponseEntity<NoteResponse> updateNote(@Valid @RequestBody NoteRequest request, @PathVariable String id) {
-        NoteResponse response = NoteResponse.from(noteService.update(request, id));
+        NoteResponse response = NoteResponse.from(noteService.update(request.toNote(), id));
         return ResponseEntity.ok(response);
     }
 

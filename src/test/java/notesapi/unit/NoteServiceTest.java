@@ -1,6 +1,5 @@
 package notesapi.unit;
 
-import notesapi.dtos.request.NoteRequest;
 import notesapi.entities.Note;
 import notesapi.exceptions.NoteNotFoundException;
 import notesapi.repositories.NoteRepository;
@@ -132,11 +131,15 @@ public class NoteServiceTest {
 
         @Test
         void should_return_new_note_when_creating_note() {
-            NoteRequest request = new NoteRequest(ANY_TITLE, ANY_CONTENT, List.of(ANY_TAG));
+            Note noteToCreate = Note.builder()
+                    .title(ANY_TITLE)
+                    .content(ANY_CONTENT)
+                    .tags(List.of(ANY_TAG))
+                    .build();
             Note expectedNote = createNote();
             when(noteRepository.save(any())).thenReturn(expectedNote);
 
-            Note createdNote = noteService.create(request);
+            Note createdNote = noteService.create(noteToCreate);
 
             assertThat(createdNote).isEqualTo(expectedNote);
         }
@@ -161,8 +164,12 @@ public class NoteServiceTest {
 
             when(noteRepository.save(any())).thenReturn(updatedNote);
 
-            NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
-            Note note = noteService.update(request, ANY_ID);
+            Note noteToUpdate = Note.builder()
+                    .title(updatedTitle)
+                    .content(updatedContent)
+                    .tags(updatedTags)
+                    .build();
+            Note note = noteService.update(noteToUpdate, ANY_ID);
 
             assertThat(note.getTitle()).isEqualTo(updatedTitle);
             assertThat(note.getContent()).isEqualTo(updatedContent);
@@ -172,10 +179,14 @@ public class NoteServiceTest {
         @Test
         public void should_throw_not_found_exception_when_note_does_not_exist() {
             String id = ANY_ID;
-            NoteRequest request = new NoteRequest(ANY_TITLE, ANY_CONTENT, List.of(ANY_TAG));
+            Note noteToUpdate = Note.builder()
+                    .title(ANY_TITLE)
+                    .content(ANY_CONTENT)
+                    .tags(List.of(ANY_TAG))
+                    .build();
             when(noteRepository.findById(id)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> noteService.update(request, id)).isInstanceOf(NoteNotFoundException.class);
+            assertThatThrownBy(() -> noteService.update(noteToUpdate, id)).isInstanceOf(NoteNotFoundException.class);
         }
     }
 
