@@ -13,14 +13,12 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static notesapi.common.TestData.ANY_CONTENT;
 import static notesapi.common.TestData.ANY_ID;
@@ -30,7 +28,6 @@ import static notesapi.common.TestData.ANY_OTHER_TITLE;
 import static notesapi.common.TestData.ANY_TAG;
 import static notesapi.common.TestData.ANY_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -54,24 +51,33 @@ public class NoteServiceTest {
 
         @Test
         public void should_find_note_by_id() {
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(createNote()));
+            Note note = createNote();
+            when(noteRepository.findById(ANY_ID)).thenReturn(Mono.just(note));
 
-            Note expectedNote = noteService.findById(ANY_ID);
+            Mono<Note> resultMono = noteService.findById(ANY_ID);
 
-            assertThat(expectedNote).isNotNull();
-            assertThat(expectedNote.getId()).isEqualTo(ANY_ID);
-            assertThat(expectedNote.getTitle()).isEqualTo(ANY_TITLE);
-            assertThat(expectedNote.getContent()).isEqualTo(ANY_CONTENT);
-            assertThat(expectedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
-            assertThat(expectedNote.getCreatedAt()).isNotNull();
-            assertThat(expectedNote.getUpdatedAt()).isNotNull();
+            StepVerifier.create(resultMono)
+                    .assertNext(foundNote -> {
+                        assertThat(foundNote).isNotNull();
+                        assertThat(foundNote.getId()).isEqualTo(ANY_ID);
+                        assertThat(foundNote.getTitle()).isEqualTo(ANY_TITLE);
+                        assertThat(foundNote.getContent()).isEqualTo(ANY_CONTENT);
+                        assertThat(foundNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
+                        assertThat(foundNote.getCreatedAt()).isNotNull();
+                        assertThat(foundNote.getUpdatedAt()).isNotNull();
+                    })
+                    .verifyComplete();
         }
 
         @Test
         public void should_throw_not_found_exception_when_note_does_not_exist() {
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.empty());
+            when(noteRepository.findById(ANY_ID)).thenReturn(Mono.empty());
 
-            assertThatThrownBy(() -> noteService.findById(ANY_ID)).isInstanceOf(NoteNotFoundException.class);
+            Mono<Note> resultMono = noteService.findById(ANY_ID);
+
+            StepVerifier.create(resultMono)
+                    .expectError(NoteNotFoundException.class)
+                    .verify();
         }
     }
 
@@ -79,30 +85,26 @@ public class NoteServiceTest {
     class FindAll {
 
         @Test
-        public void should_return_page_of_notes_when_getting_all_notes() {
-            Note note = createNote();
-            List<Note> notes = List.of(note);
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Note> page = new PageImpl<>(notes, pageable, notes.size());
-            when(noteRepository.findAll(pageable)).thenReturn(page);
+        void should_return_all_notes() {
+            List<Note> notes = List.of(createNote());
+            when(noteRepository.findAll()).thenReturn(Flux.fromIterable(notes));
 
-            Page<Note> expectedPage = noteService.findAll(pageable);
+            Flux<Note> notesFlux = noteService.findAll();
 
-            assertThat(expectedPage.getContent()).hasSize(1);
-            assertThat(expectedPage.getTotalElements()).isEqualTo(1);
-            assertThat(expectedPage.getContent()).containsExactly(note);
+            StepVerifier.create(notesFlux)
+                    .expectNextSequence(notes)
+                    .verifyComplete();
         }
 
         @Test
-        public void should_return_empty_page_when_there_are_no_notes() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Note> page = new PageImpl<>(List.of(), pageable, 0);
-            when(noteRepository.findAll(pageable)).thenReturn(page);
+        void should_return_empty_when_there_are_no_notes() {
+            when(noteRepository.findAll()).thenReturn(Flux.empty());
 
-            Page<Note> expectedPage = noteService.findAll(pageable);
+            Flux<Note> notesFlux = noteService.findAll();
 
-            assertThat(expectedPage.getContent()).isEmpty();
-            assertThat(expectedPage.getTotalElements()).isEqualTo(0);
+            StepVerifier.create(notesFlux)
+                    .expectComplete()
+                    .verify();
         }
     }
 
@@ -110,58 +112,66 @@ public class NoteServiceTest {
     class Search {
 
         @Test
-        public void should_return_page_of_notes_when_searching_notes_by_keyword() {
-            Note note = createNote();
-            List<Note> notes = List.of(note);
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Note> page = new PageImpl<>(notes, pageable, notes.size());
+        void should_return_notes_when_searching_by_keyword() {
+            List<Note> notes = List.of(createNote());
             String keyword = "title";
-            when(noteRepository.search(pageable, keyword)).thenReturn(page);
+            when(noteRepository.search(keyword)).thenReturn(Flux.fromIterable(notes));
 
-            Page<Note> expectedPage = noteService.search(pageable, keyword);
+            Flux<Note> notesFlux = noteService.search(keyword);
 
-            assertThat(expectedPage.getContent()).hasSize(1);
-            assertThat(expectedPage.getTotalElements()).isEqualTo(1);
-            assertThat(expectedPage.getContent()).containsExactly(note);
+            StepVerifier.create(notesFlux)
+                    .expectNextSequence(notes)
+                    .verifyComplete();
         }
 
         @Test
-        public void should_return_empty_page_when_there_are_no_results() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Note> page = new PageImpl<>(List.of(), pageable, 0);
+        void should_return_empty_when_no_search_results() {
             String keyword = "title";
-            when(noteRepository.search(pageable, keyword)).thenReturn(page);
+            when(noteRepository.search(keyword)).thenReturn(Flux.empty());
 
-            Page<Note> expectedPage = noteService.search(pageable, keyword);
+            Flux<Note> notesFlux = noteService.search(keyword);
 
-            assertThat(expectedPage.getContent()).isEmpty();
-            assertThat(expectedPage.getTotalElements()).isEqualTo(0);
+            StepVerifier.create(notesFlux)
+                    .expectComplete()
+                    .verify();
         }
     }
 
     @Nested
     class Create {
 
-        @Test
-        void should_create_note() {
-            LocalDateTime time = LocalDateTime.now();
-            when(dateTimeProvider.now()).thenReturn(time);
+    @Test
+    void should_create_note() {
+        LocalDateTime time = LocalDateTime.now();
+        when(dateTimeProvider.now()).thenReturn(time);
 
-            Note noteToCreate = Note.builder()
-                    .title(ANY_TITLE)
-                    .content(ANY_CONTENT)
-                    .tags(List.of(ANY_TAG))
-                    .build();
-            noteService.create(noteToCreate);
+        Note noteToCreate = Note.builder()
+                .title(ANY_TITLE)
+                .content(ANY_CONTENT)
+                .tags(List.of(ANY_TAG))
+                .build();
 
-            verify(noteRepository).save(noteCaptor.capture());
-            Note savedNote = noteCaptor.getValue();
-            assertThat(savedNote.getTitle()).isEqualTo(ANY_TITLE);
-            assertThat(savedNote.getContent()).isEqualTo(ANY_CONTENT);
-            assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
-            assertThat(savedNote.getCreatedAt()).isEqualTo(time);
-            assertThat(savedNote.getUpdatedAt()).isEqualTo(time);
-        }
+        when(noteRepository.save(noteCaptor.capture())).thenAnswer(invocation -> {
+            Note argNote = invocation.getArgument(0);
+            return Mono.just(argNote);
+        });
+
+        Mono<Note> resultMono = noteService.create(noteToCreate);
+
+        StepVerifier.create(resultMono)
+                .assertNext(savedNote -> {
+                    assertThat(savedNote.getTitle()).isEqualTo(ANY_TITLE);
+                    assertThat(savedNote.getContent()).isEqualTo(ANY_CONTENT);
+                    assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
+                    assertThat(savedNote.getCreatedAt()).isEqualTo(time);
+                    assertThat(savedNote.getUpdatedAt()).isEqualTo(time);
+                })
+                .verifyComplete();
+
+        Note savedNote = noteCaptor.getValue();
+        assertThat(savedNote.getCreatedAt()).isEqualTo(time);
+        assertThat(savedNote.getUpdatedAt()).isEqualTo(time);
+    }
     }
 
     @Nested
@@ -170,38 +180,50 @@ public class NoteServiceTest {
         @Test
         void should_update_note() {
             Note originalNote = createNote();
+            when(noteRepository.findById(ANY_ID)).thenReturn(Mono.just(originalNote));
             LocalDateTime updatedTime = LocalDateTime.now();
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(originalNote));
             when(dateTimeProvider.now()).thenReturn(updatedTime);
+            when(noteRepository.save(noteCaptor.capture())).thenAnswer(invocation -> {
+                Note argNote = invocation.getArgument(0);
+                return Mono.just(argNote);
+            });
 
             Note noteToUpdate = Note.builder()
                     .title(ANY_OTHER_TITLE)
                     .content(ANY_OTHER_CONTENT)
                     .tags(List.of(ANY_TAG, ANY_OTHER_TAG))
                     .build();
-            noteService.update(noteToUpdate, ANY_ID);
+            Mono<Note> updatedNoteMono = noteService.update(noteToUpdate, ANY_ID);
 
-            verify(noteRepository).save(noteCaptor.capture());
-            Note savedNote = noteCaptor.getValue();
-            assertThat(savedNote.getId()).isEqualTo(ANY_ID);
-            assertThat(savedNote.getTitle()).isEqualTo(ANY_OTHER_TITLE);
-            assertThat(savedNote.getContent()).isEqualTo(ANY_OTHER_CONTENT);
-            assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG, ANY_OTHER_TAG));
-            assertThat(savedNote.getCreatedAt()).isEqualTo(originalNote.getCreatedAt());
-            assertThat(savedNote.getUpdatedAt()).isEqualTo(updatedTime);
+            StepVerifier.create(updatedNoteMono)
+                    .assertNext(savedNote -> {
+                        assertThat(savedNote.getId()).isEqualTo(ANY_ID);
+                        assertThat(savedNote.getTitle()).isEqualTo(ANY_OTHER_TITLE);
+                        assertThat(savedNote.getContent()).isEqualTo(ANY_OTHER_CONTENT);
+                        assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG, ANY_OTHER_TAG));
+                        assertThat(savedNote.getCreatedAt()).isEqualTo(originalNote.getCreatedAt());
+                        assertThat(savedNote.getUpdatedAt()).isEqualTo(updatedTime);
+                    })
+                    .verifyComplete();
+
+            Note savedNoteCaptured = noteCaptor.getValue();
+            assertThat(savedNoteCaptured.getUpdatedAt()).isEqualTo(updatedTime);
         }
 
         @Test
-        public void should_throw_not_found_exception_when_note_does_not_exist() {
-            String id = ANY_ID;
+        void should_throw_not_found_exception_when_note_does_not_exist() {
             Note noteToUpdate = Note.builder()
                     .title(ANY_TITLE)
                     .content(ANY_CONTENT)
                     .tags(List.of(ANY_TAG))
                     .build();
-            when(noteRepository.findById(id)).thenReturn(Optional.empty());
+            when(noteRepository.findById(ANY_ID)).thenReturn(Mono.empty());
 
-            assertThatThrownBy(() -> noteService.update(noteToUpdate, id)).isInstanceOf(NoteNotFoundException.class);
+            Mono<Note> updatedNoteMono = noteService.update(noteToUpdate, ANY_ID);
+
+            StepVerifier.create(updatedNoteMono)
+                    .expectError(NoteNotFoundException.class)
+                    .verify();
             verify(noteRepository, never()).save(any());
         }
     }
@@ -210,19 +232,26 @@ public class NoteServiceTest {
     class Delete {
 
         @Test
-        public void should_delete_note_by_id() {
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.of(createNote()));
+        void should_delete_note_by_id() {
+            when(noteRepository.findById(ANY_ID)).thenReturn(Mono.just(createNote()));
+            when(noteRepository.deleteById(ANY_ID)).thenReturn(Mono.empty());
 
-            noteService.deleteById(ANY_ID);
+            Mono<Void> deleteMono = noteService.deleteById(ANY_ID);
 
+            StepVerifier.create(deleteMono)
+                    .verifyComplete();
             verify(noteRepository).deleteById(ANY_ID);
         }
 
         @Test
-        public void should_throw_not_found_exception_when_note_does_not_exist() {
-            when(noteRepository.findById(ANY_ID)).thenReturn(Optional.empty());
+        void should_throw_not_found_exception_when_note_does_not_exist() {
+            when(noteRepository.findById(ANY_ID)).thenReturn(Mono.empty());
 
-            assertThatThrownBy(() -> noteService.deleteById(ANY_ID)).isInstanceOf(NoteNotFoundException.class);
+            Mono<Void> deleteMono = noteService.deleteById(ANY_ID);
+
+            StepVerifier.create(deleteMono)
+                    .expectError(NoteNotFoundException.class)
+                    .verify();
             verify(noteRepository, never()).deleteById(any());
         }
     }

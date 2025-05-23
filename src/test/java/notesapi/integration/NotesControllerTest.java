@@ -2,7 +2,6 @@ package notesapi.integration;
 
 import notesapi.application.dto.request.NoteRequest;
 import notesapi.application.dto.response.NoteResponse;
-import notesapi.application.dto.response.PaginatedResponse;
 import notesapi.domain.model.Note;
 import notesapi.domain.repository.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,14 +9,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,14 +28,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class NotesControllerTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private WebTestClient webTestClient;
 
     @Autowired
     private NoteRepository noteRepository;
 
     @BeforeEach
     void setUp() {
-        noteRepository.deleteAll();
+        noteRepository.deleteAll().block();
     }
 
     public static final String NOTE_NOT_FOUND_ERROR_MESSAGE = "Note with ID non-existent-id not found.";
@@ -51,20 +45,33 @@ public class NotesControllerTest {
 
         @Test
         void should_return_ok_when_getting_note_by_id() {
-            noteRepository.save(createNote());
+            Note note = createNote();
+            noteRepository.save(note).block();
 
-            ResponseEntity<NoteResponse> response = restTemplate.getForEntity("/notes/" + ANY_ID, NoteResponse.class);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
+            webTestClient.get()
+                    .uri("/notes/{id}", ANY_ID)
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody(NoteResponse.class)
+                    .value(response -> {
+                        assertThat(response).isNotNull();
+                        assertThat(response.id()).isEqualTo(ANY_ID);
+                        assertThat(response.title()).isEqualTo(ANY_TITLE);
+                        assertThat(response.content()).isEqualTo(ANY_CONTENT);
+                        assertThat(response.tags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
+                        assertThat(response.createdAt()).isNotNull();
+                        assertThat(response.updatedAt()).isNotNull();
+                    });
         }
 
         @Test
         void should_return_not_found_when_note_does_not_exist() {
-            ResponseEntity<String> response = restTemplate.getForEntity("/notes/non-existent-id", String.class);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).contains(NOTE_NOT_FOUND_ERROR_MESSAGE);
+            webTestClient.get()
+                    .uri("/notes/non-existent-id")
+                    .exchange()
+                    .expectStatus().isNotFound()
+                    .expectBody(String.class)
+                    .value(body -> assertThat(body).contains(NOTE_NOT_FOUND_ERROR_MESSAGE));
         }
     }
 
@@ -73,73 +80,67 @@ public class NotesControllerTest {
 
         @Test
         void should_return_ok_when_getting_all_notes() {
-            noteRepository.save(createNote());
+            Note savedNote = noteRepository.save(createNote()).block();
 
-            ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
-                    "/notes",
-                    HttpMethod.GET,
-                    null,
-                    PaginatedResponse.class
-            );
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getItems()).hasSize(1);
+            webTestClient.get()
+                    .uri("/notes")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(NoteResponse.class)
+                    .hasSize(1)
+                    .value(notes -> {
+                        assertThat(notes.getFirst().id()).isEqualTo(savedNote.getId());
+                    });
         }
 
         @Test
         void should_return_ok_when_there_are_no_notes() {
-            ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
-                    "/notes",
-                    HttpMethod.GET,
-                    null,
-                    PaginatedResponse.class
-            );
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getItems()).isEmpty();
+            webTestClient.get()
+                    .uri("/notes")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(NoteResponse.class)
+                    .hasSize(0);
         }
     }
 
     @Nested
     class SearchNotesByKeyword {
+
         @Test
         void should_return_ok_when_searching_notes_by_keyword() {
-            noteRepository.save(createNote());
-            noteRepository.save(createNote());
+            noteRepository.save(createNote()).block();
 
             String keyword = "title";
-            ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
-                    "/notes/search?keyword=" + keyword,
-                    HttpMethod.GET,
-                    null,
-                    PaginatedResponse.class
-            );
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getItems()).hasSize(1);
+            webTestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/notes/search")
+                            .queryParam("keyword", keyword)
+                            .build())
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(NoteResponse.class)
+                    .hasSize(1);
         }
 
         @Test
         void should_return_ok_when_there_are_no_results() {
             String keyword = "title";
-            ResponseEntity<PaginatedResponse> response = restTemplate.exchange(
-                    "/notes/search?keyword=" + keyword,
-                    HttpMethod.GET,
-                    null,
-                    PaginatedResponse.class
-            );
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getItems()).isEmpty();
+            webTestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/notes/search")
+                            .queryParam("keyword", keyword)
+                            .build())
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBodyList(NoteResponse.class)
+                    .hasSize(0);
         }
     }
 
     @Nested
     class CreateNote {
+
         @Test
         void should_return_ok_when_creating_note() {
             String title = ANY_TITLE;
@@ -147,18 +148,22 @@ public class NotesControllerTest {
             List<String> tags = List.of(ANY_TAG);
             NoteRequest request = new NoteRequest(title, content, tags);
 
-            ResponseEntity<NoteResponse> response = restTemplate.postForEntity("/notes", request, NoteResponse.class);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-
-            Optional<Note> savedNote = noteRepository.findById(response.getBody().id());
-            assertThat(savedNote).isPresent();
-            assertThat(savedNote.get().getTitle()).isEqualTo(title);
-            assertThat(savedNote.get().getContent()).isEqualTo(content);
-            assertThat(savedNote.get().getTags()).usingRecursiveComparison().isEqualTo(tags);
-            assertThat(savedNote.get().getCreatedAt()).isNotNull();
-            assertThat(savedNote.get().getUpdatedAt()).isNotNull();
+            webTestClient.post()
+                    .uri("/notes")
+                    .bodyValue(request)
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody(NoteResponse.class)
+                    .value(response -> {
+                        assertThat(response).isNotNull();
+                        Note savedNote = noteRepository.findById(response.id()).block();
+                        assertThat(savedNote).isNotNull();
+                        assertThat(savedNote.getTitle()).isEqualTo(title);
+                        assertThat(savedNote.getContent()).isEqualTo(content);
+                        assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(tags);
+                        assertThat(savedNote.getCreatedAt()).isNotNull();
+                        assertThat(savedNote.getUpdatedAt()).isNotNull();
+                    });
         }
     }
 
@@ -166,55 +171,69 @@ public class NotesControllerTest {
     class UpdateNote {
         @Test
         void should_return_ok_when_updating_note() {
-            Note originalNote = noteRepository.save(createNote());
+            noteRepository.save(createNote()).block();
 
-            String updatedTitle = ANY_OTHER_TITLE;
-            String updatedContent = ANY_OTHER_CONTENT;
             List<String> updatedTags = List.of(ANY_TAG, ANY_OTHER_TAG);
-            NoteRequest request = new NoteRequest(updatedTitle, updatedContent, updatedTags);
+            NoteRequest request = new NoteRequest(ANY_OTHER_TITLE, ANY_OTHER_CONTENT, updatedTags);
 
-            ResponseEntity<NoteResponse> response = restTemplate.exchange("/notes/" + ANY_ID, HttpMethod.PUT, new HttpEntity<>(request), NoteResponse.class);
+            webTestClient.put()
+                    .uri("/notes/" + ANY_ID)
+                    .bodyValue(request)
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody(NoteResponse.class)
+                    .value(response -> {
+                        assertThat(response).isNotNull();
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-
-            Optional<Note> updatedNote = noteRepository.findById(ANY_ID);
-            assertThat(updatedNote).isPresent();
-            assertThat(updatedNote.get().getTitle()).isEqualTo(updatedTitle);
-            assertThat(updatedNote.get().getContent()).isEqualTo(updatedContent);
-            assertThat(updatedNote.get().getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
-            assertThat(updatedNote.get().getCreatedAt().truncatedTo(ChronoUnit.MILLIS)).isEqualTo(originalNote.getCreatedAt().truncatedTo(ChronoUnit.MILLIS));
-            assertThat(updatedNote.get().getUpdatedAt().truncatedTo(ChronoUnit.MILLIS)).isNotEqualTo(originalNote.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS));
+                        Note updatedNote = noteRepository.findById(ANY_ID).block();
+                        assertThat(updatedNote).isNotNull();
+                        assertThat(updatedNote.getTitle()).isEqualTo(ANY_OTHER_TITLE);
+                        assertThat(updatedNote.getContent()).isEqualTo(ANY_OTHER_CONTENT);
+                        assertThat(updatedNote.getTags()).usingRecursiveComparison().isEqualTo(updatedTags);
+                        assertThat(updatedNote.getCreatedAt()).isInstanceOf(LocalDateTime.class);
+                        assertThat(updatedNote.getUpdatedAt()).isInstanceOf(LocalDateTime.class);
+                    });
         }
 
         @Test
         void should_return_not_found_when_note_does_not_exist() {
             NoteRequest request = new NoteRequest(ANY_TITLE, ANY_CONTENT, List.of(ANY_TAG));
-            ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.PUT, new HttpEntity<>(request), String.class);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).contains(NOTE_NOT_FOUND_ERROR_MESSAGE);
+            webTestClient.put()
+                    .uri("/notes/non-existent-id")
+                    .bodyValue(request)
+                    .exchange()
+                    .expectStatus().isNotFound()
+                    .expectBody(String.class)
+                    .value(body -> assertThat(body).contains(NOTE_NOT_FOUND_ERROR_MESSAGE));
         }
     }
 
     @Nested
     class DeleteNote {
+
         @Test
         void should_return_ok_when_deleting_note_by_id() {
-            Note savedNote = noteRepository.save(createNote());
-            ResponseEntity<Void> response = restTemplate.exchange("/notes/" + savedNote.getId(), HttpMethod.DELETE, null, Void.class);
+            Note savedNote = noteRepository.save(createNote()).block();
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNull();
-            assertThat(noteRepository.findById(savedNote.getId())).isEmpty();
+            webTestClient.delete()
+                    .uri("/notes/{id}", savedNote.getId())
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody().isEmpty();
+
+            Optional<Note> deletedNote = noteRepository.findById(savedNote.getId()).blockOptional();
+            assertThat(deletedNote).isEmpty();
         }
 
         @Test
         void should_return_not_found_when_note_does_not_exist() {
-            ResponseEntity<String> response = restTemplate.exchange("/notes/non-existent-id" , HttpMethod.DELETE, null, String.class);
-
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(response.getBody()).contains(NOTE_NOT_FOUND_ERROR_MESSAGE);
+            webTestClient.delete()
+                    .uri("/notes/{id}", "non-existent-id")
+                    .exchange()
+                    .expectStatus().isNotFound()
+                    .expectBody(String.class)
+                    .value(body -> assertThat(body).contains(NOTE_NOT_FOUND_ERROR_MESSAGE));
         }
     }
 

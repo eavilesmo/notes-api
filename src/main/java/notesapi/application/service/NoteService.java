@@ -5,9 +5,9 @@ import notesapi.domain.model.Note;
 import notesapi.domain.exception.NoteNotFoundException;
 import notesapi.domain.repository.NoteRepository;
 import notesapi.application.common.DateTimeProvider;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 @AllArgsConstructor
@@ -16,19 +16,19 @@ public class NoteService {
     private NoteRepository noteRepository;
     private DateTimeProvider dateTimeProvider;
 
-    public Note findById(String id) {
-        return noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
+    public Mono<Note> findById(String id) {
+        return noteRepository.findById(id).switchIfEmpty(Mono.error(new NoteNotFoundException(id)));
     }
 
-    public Page<Note> findAll(Pageable pageable) {
-        return noteRepository.findAll(pageable);
+    public Flux<Note> findAll() {
+        return noteRepository.findAll();
     }
 
-    public Page<Note> search(Pageable pageable, String keyword) {
-        return noteRepository.search(pageable, keyword);
+    public Flux<Note> search(String keyword) {
+        return noteRepository.search(keyword);
     }
 
-    public Note create(Note note) {
+    public Mono<Note> create(Note note) {
         Note noteToSave = Note.builder()
                 .title(note.getTitle())
                 .content(note.getContent())
@@ -39,21 +39,23 @@ public class NoteService {
         return noteRepository.save(noteToSave);
     }
 
-    public Note update(Note note, String id) {
-        Note savedNote = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
-        Note updatedNote = Note.builder()
-                .id(savedNote.getId())
-                .title(note.getTitle())
-                .content(note.getContent())
-                .tags(note.getTags())
-                .createdAt(savedNote.getCreatedAt())
-                .updatedAt(dateTimeProvider.now())
-                .build();
-        return noteRepository.save(updatedNote);
+    public Mono<Note> update(Note note, String id) {
+        return noteRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NoteNotFoundException(id)))
+                .map(savedNote -> Note.builder()
+                        .id(savedNote.getId())
+                        .title(note.getTitle())
+                        .content(note.getContent())
+                        .tags(note.getTags())
+                        .createdAt(savedNote.getCreatedAt())
+                        .updatedAt(dateTimeProvider.now())
+                        .build())
+                .flatMap(noteRepository::save);
     }
 
-    public void deleteById(String id) {
-        Note note = noteRepository.findById(id).orElseThrow(() -> new NoteNotFoundException(id));
-        noteRepository.deleteById(note.getId());
+    public Mono<Void> deleteById(String id) {
+        return noteRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NoteNotFoundException(id)))
+                .flatMap(note -> noteRepository.deleteById(note.getId()));
     }
 }

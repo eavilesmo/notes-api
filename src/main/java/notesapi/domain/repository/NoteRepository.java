@@ -1,17 +1,15 @@
 package notesapi.domain.repository;
 
 import notesapi.domain.model.Note;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface NoteRepository {
 
-    Optional<Note> findById(String id);
-    Note save(Note note);
-    void deleteAll();
-    void deleteById(String id);
-    Page<Note> findAll(Pageable pageable);
-    Page<Note> search(Pageable pageable, String keyword);
+    Mono<Note> findById(String id);
+    Mono<Note> save(Note note);
+    Mono<Void> deleteAll();
+    Mono<Void> deleteById(String id);
+    Flux<Note> findAll();
+    Flux<Note> search(String keyword);
 }

@@ -1,20 +1,46 @@
 package notesapi.infraestructure.repository;
 
+import lombok.AllArgsConstructor;
 import notesapi.domain.model.Note;
 import notesapi.domain.repository.NoteRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Repository
-public interface MongoNoteRepository extends NoteRepository, MongoRepository<Note, String> {
+@AllArgsConstructor
+public class MongoNoteRepository implements NoteRepository {
 
-    @Query("{ $or: [ " +
-            "{ 'title': { $regex: ?0, $options: 'i' }}, " +
-            "{ 'content': { $regex: ?0, $options: 'i' }}, " +
-            "{ 'tags': { $regex: ?0, $options: 'i' }} " +
-            "]}")
-    Page<Note> search(Pageable pageable, String keyword);
+    private SpringDataNoteRepository springDataNoteRepository;
+
+    @Override
+    public Mono<Note> findById(String id) {
+        return springDataNoteRepository.findById(id);
+    }
+
+    @Override
+    public Mono<Note> save(Note note) {
+        return springDataNoteRepository.save(note);
+    }
+
+    @Override
+    public Mono<Void> deleteAll() {
+        return springDataNoteRepository.deleteAll();
+    }
+
+    @Override
+    public Mono<Void> deleteById(String id) {
+        return springDataNoteRepository.deleteById(id);
+    }
+
+    @Override
+    public Flux<Note> findAll() {
+        return springDataNoteRepository.findAll();
+    }
+
+    @Override
+    public Flux<Note> search(String keyword) {
+        return springDataNoteRepository.searchByKeyword(keyword);
+    }
 }

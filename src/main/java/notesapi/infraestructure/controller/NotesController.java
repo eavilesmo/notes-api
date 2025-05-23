@@ -5,12 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import notesapi.application.dto.request.NoteRequest;
 import notesapi.application.dto.response.NoteResponse;
-import notesapi.application.dto.response.PaginatedResponse;
 import notesapi.application.service.NoteService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/notes")
@@ -35,52 +33,53 @@ public class NotesController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get note by ID")
-    public ResponseEntity<NoteResponse> getNoteById(@PathVariable String id) {
-        NoteResponse response = NoteResponse.from(noteService.findById(id));
-        return ResponseEntity.ok(response);
+    public Mono<ResponseEntity<NoteResponse>> getNoteById(@PathVariable String id) {
+        return noteService.findById(id)
+                .map(NoteResponse::from)
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping
     @Operation(summary = "Get all notes")
-    public ResponseEntity<PaginatedResponse> getAllNotes(@PageableDefault(
-            page = 0,
-            size = 10,
-            sort = "createdAt",
-            direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        Page<NoteResponse> page = noteService.findAll(pageable).map(NoteResponse::from);
-        return ResponseEntity.ok(new PaginatedResponse(page));
+    public Mono<ResponseEntity<List<NoteResponse>>> getAllNotes() {
+        return noteService.findAll()
+                .map(NoteResponse::from)
+                .collectList()
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search note by keyword")
-    public ResponseEntity<PaginatedResponse> searchNotes(@RequestParam String keyword, @PageableDefault(
-            page = 0,
-            size = 10,
-            sort = "createdAt",
-            direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<NoteResponse> page = noteService.search(pageable, keyword).map(NoteResponse::from);
-        return ResponseEntity.ok(new PaginatedResponse(page));
+    public Mono<ResponseEntity<List<NoteResponse>>> searchNotes(@RequestParam String keyword) {
+        return noteService.search(keyword)
+                .map(NoteResponse::from)
+                .collectList()
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping
     @Operation(summary = "Create a note")
-    public ResponseEntity<NoteResponse> createNote(@Valid @RequestBody NoteRequest request) {
-        NoteResponse response = NoteResponse.from(noteService.create(request.toNote()));
-        return ResponseEntity.ok(response);
+    public Mono<ResponseEntity<NoteResponse>> createNote(@Valid @RequestBody NoteRequest request) {
+        return noteService.create(request.toNote())
+                .map(NoteResponse::from)
+                .map(ResponseEntity::ok);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update note")
-    public ResponseEntity<NoteResponse> updateNote(@Valid @RequestBody NoteRequest request, @PathVariable String id) {
-        NoteResponse response = NoteResponse.from(noteService.update(request.toNote(), id));
-        return ResponseEntity.ok(response);
+    public Mono<ResponseEntity<NoteResponse>> updateNote(
+            @Valid @RequestBody NoteRequest request,
+            @PathVariable String id
+    ) {
+        return noteService.update(request.toNote(), id)
+                .map(NoteResponse::from)
+                .map(ResponseEntity::ok);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete note by ID")
-    public ResponseEntity<Void> deleteNoteById(@PathVariable String id) {
-        noteService.deleteById(id);
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<Void>> deleteNoteById(@PathVariable String id) {
+        return noteService.deleteById(id)
+                .then(Mono.just(ResponseEntity.ok().build()));
     }
 }
