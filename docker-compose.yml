@@ -17,5 +17,17 @@ services:
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/notesdb
 
+  test-runner:
+    image: maven:3.9.6-eclipse-temurin-21
+    container_name: notes-api-test-runner
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: mvn test
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/notesdb
+
 volumes:
   mongo_data:
