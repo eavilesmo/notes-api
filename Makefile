@@ -12,6 +12,7 @@ up:
 	@sleep 3
 	@if [ "$$(docker inspect -f '{{.State.Running}}' notes-api 2>/dev/null)" = "true" ]; then \
 		echo "$(PROJECT_NAME) is up and running!"; \
+		echo "Visit Swagger UI at: http://localhost:8080/swagger-ui.html"; \
 	else \
 		echo "Failed to start $(PROJECT_NAME)."; \
 	fi
