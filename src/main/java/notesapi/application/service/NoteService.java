@@ -1,10 +1,10 @@
-package notesapi.services;
+package notesapi.application.service;
 
 import lombok.AllArgsConstructor;
-import notesapi.entities.Note;
-import notesapi.exceptions.NoteNotFoundException;
-import notesapi.repositories.NoteRepository;
-import notesapi.utils.DateTimeProvider;
+import notesapi.domain.model.Note;
+import notesapi.domain.exception.NoteNotFoundException;
+import notesapi.domain.repository.NoteRepository;
+import notesapi.application.common.DateTimeProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package notesapi;
+package notesapi.common;
 
 public class TestData {
 

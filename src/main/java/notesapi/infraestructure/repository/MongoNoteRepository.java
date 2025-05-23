@@ -1,6 +1,7 @@
-package notesapi.repositories;
+package notesapi.infraestructure.repository;
 
-import notesapi.entities.Note;
+import notesapi.domain.model.Note;
+import notesapi.domain.repository.NoteRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

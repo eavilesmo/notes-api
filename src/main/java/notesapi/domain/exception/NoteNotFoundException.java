@@ -1,4 +1,4 @@
-package notesapi.exceptions;
+package notesapi.domain.exception;
 
 public class NoteNotFoundException extends RuntimeException{
     public NoteNotFoundException(String id) {

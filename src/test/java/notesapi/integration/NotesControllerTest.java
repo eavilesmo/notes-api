@@ -1,10 +1,10 @@
 package notesapi.integration;
 
-import notesapi.dtos.request.NoteRequest;
-import notesapi.dtos.response.NoteResponse;
-import notesapi.dtos.response.PaginatedResponse;
-import notesapi.entities.Note;
-import notesapi.repositories.NoteRepository;
+import notesapi.application.dto.request.NoteRequest;
+import notesapi.application.dto.response.NoteResponse;
+import notesapi.application.dto.response.PaginatedResponse;
+import notesapi.domain.model.Note;
+import notesapi.domain.repository.NoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,13 +21,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-import static notesapi.TestData.ANY_CONTENT;
-import static notesapi.TestData.ANY_ID;
-import static notesapi.TestData.ANY_OTHER_CONTENT;
-import static notesapi.TestData.ANY_OTHER_TAG;
-import static notesapi.TestData.ANY_OTHER_TITLE;
-import static notesapi.TestData.ANY_TAG;
-import static notesapi.TestData.ANY_TITLE;
+import static notesapi.common.TestData.ANY_CONTENT;
+import static notesapi.common.TestData.ANY_ID;
+import static notesapi.common.TestData.ANY_OTHER_CONTENT;
+import static notesapi.common.TestData.ANY_OTHER_TAG;
+import static notesapi.common.TestData.ANY_OTHER_TITLE;
+import static notesapi.common.TestData.ANY_TAG;
+import static notesapi.common.TestData.ANY_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

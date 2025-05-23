@@ -1,10 +1,10 @@
 package notesapi.unit;
 
-import notesapi.entities.Note;
-import notesapi.exceptions.NoteNotFoundException;
-import notesapi.repositories.NoteRepository;
-import notesapi.services.NoteService;
-import notesapi.utils.DateTimeProvider;
+import notesapi.domain.model.Note;
+import notesapi.domain.exception.NoteNotFoundException;
+import notesapi.domain.repository.NoteRepository;
+import notesapi.application.service.NoteService;
+import notesapi.application.common.DateTimeProvider;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,13 +22,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static notesapi.TestData.ANY_CONTENT;
-import static notesapi.TestData.ANY_ID;
-import static notesapi.TestData.ANY_OTHER_CONTENT;
-import static notesapi.TestData.ANY_OTHER_TAG;
-import static notesapi.TestData.ANY_OTHER_TITLE;
-import static notesapi.TestData.ANY_TAG;
-import static notesapi.TestData.ANY_TITLE;
+import static notesapi.common.TestData.ANY_CONTENT;
+import static notesapi.common.TestData.ANY_ID;
+import static notesapi.common.TestData.ANY_OTHER_CONTENT;
+import static notesapi.common.TestData.ANY_OTHER_TAG;
+import static notesapi.common.TestData.ANY_OTHER_TITLE;
+import static notesapi.common.TestData.ANY_TAG;
+import static notesapi.common.TestData.ANY_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;

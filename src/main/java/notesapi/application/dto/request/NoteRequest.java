@@ -1,7 +1,7 @@
-package notesapi.dtos.request;
+package notesapi.application.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
-import notesapi.entities.Note;
+import notesapi.domain.model.Note;
 
 import java.util.List;
 

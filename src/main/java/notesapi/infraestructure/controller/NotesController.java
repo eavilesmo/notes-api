@@ -1,12 +1,12 @@
-package notesapi.controllers;
+package notesapi.infraestructure.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import notesapi.dtos.request.NoteRequest;
-import notesapi.dtos.response.NoteResponse;
-import notesapi.dtos.response.PaginatedResponse;
-import notesapi.services.NoteService;
+import notesapi.application.dto.request.NoteRequest;
+import notesapi.application.dto.response.NoteResponse;
+import notesapi.application.dto.response.PaginatedResponse;
+import notesapi.application.service.NoteService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

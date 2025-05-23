@@ -1,6 +1,6 @@
-package notesapi.dtos.response;
+package notesapi.application.dto.response;
 
-import notesapi.entities.Note;
+import notesapi.domain.model.Note;
 
 import java.time.LocalDateTime;
 import java.util.List;

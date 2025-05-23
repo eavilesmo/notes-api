@@ -1,4 +1,4 @@
-package notesapi.entities;
+package notesapi.domain.model;
 
 import lombok.Builder;
 import lombok.Getter;
