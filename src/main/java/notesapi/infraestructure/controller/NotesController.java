@@ -100,6 +100,6 @@ public class NotesController {
     @Operation(summary = "Delete note by ID")
     public Mono<ResponseEntity<Void>> deleteNoteById(@PathVariable String id) {
         return noteService.deleteById(id)
-                .then(Mono.just(ResponseEntity.ok().build()));
+                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 }

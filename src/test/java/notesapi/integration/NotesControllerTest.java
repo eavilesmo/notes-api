@@ -237,7 +237,7 @@ public class NotesControllerTest {
             webTestClient.delete()
                     .uri("/notes/{id}", savedNote.getId())
                     .exchange()
-                    .expectStatus().isOk()
+                    .expectStatus().isNoContent()
                     .expectBody().isEmpty();
 
             Optional<Note> deletedNote = noteRepository.findById(savedNote.getId()).blockOptional();
