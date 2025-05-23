@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import notesapi.application.dto.request.NoteRequest;
 import notesapi.application.dto.response.NoteResponse;
 import notesapi.application.dto.response.PaginatedResponse;
-import notesapi.application.service.NoteService;
+import notesapi.domain.service.NoteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package notesapi.application.common;
+package notesapi.common;
 
 import org.springframework.stereotype.Component;
 
