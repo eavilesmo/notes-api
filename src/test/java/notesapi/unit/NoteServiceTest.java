@@ -85,11 +85,13 @@ public class NoteServiceTest {
     class FindAll {
 
         @Test
-        void should_return_all_notes() {
+        void should_return_all_notes_paginated() {
             List<Note> notes = List.of(createNote());
-            when(noteRepository.findAll()).thenReturn(Flux.fromIterable(notes));
+            int page = 0;
+            int size = 10;
+            when(noteRepository.findAll(page, size)).thenReturn(Flux.fromIterable(notes));
 
-            Flux<Note> notesFlux = noteService.findAll();
+            Flux<Note> notesFlux = noteService.findAll(page, size);
 
             StepVerifier.create(notesFlux)
                     .expectNextSequence(notes)
@@ -97,10 +99,12 @@ public class NoteServiceTest {
         }
 
         @Test
-        void should_return_empty_when_there_are_no_notes() {
-            when(noteRepository.findAll()).thenReturn(Flux.empty());
+        void should_return_empty_paginated_when_there_are_no_notes() {
+            int page = 0;
+            int size = 10;
+            when(noteRepository.findAll(page, size)).thenReturn(Flux.empty());
 
-            Flux<Note> notesFlux = noteService.findAll();
+            Flux<Note> notesFlux = noteService.findAll(page, size);
 
             StepVerifier.create(notesFlux)
                     .expectComplete()
@@ -112,12 +116,14 @@ public class NoteServiceTest {
     class Search {
 
         @Test
-        void should_return_notes_when_searching_by_keyword() {
+        void should_return_notes_when_searching_by_keyword_paginated() {
             List<Note> notes = List.of(createNote());
             String keyword = "title";
-            when(noteRepository.search(keyword)).thenReturn(Flux.fromIterable(notes));
+            int page = 0;
+            int size = 10;
+            when(noteRepository.search(keyword, page, size)).thenReturn(Flux.fromIterable(notes));
 
-            Flux<Note> notesFlux = noteService.search(keyword);
+            Flux<Note> notesFlux = noteService.search(keyword, page, size);
 
             StepVerifier.create(notesFlux)
                     .expectNextSequence(notes)
@@ -125,11 +131,13 @@ public class NoteServiceTest {
         }
 
         @Test
-        void should_return_empty_when_no_search_results() {
+        void should_return_empty_when_no_search_results_paginated() {
             String keyword = "title";
-            when(noteRepository.search(keyword)).thenReturn(Flux.empty());
+            int page = 0;
+            int size = 10;
+            when(noteRepository.search(keyword, page, size)).thenReturn(Flux.empty());
 
-            Flux<Note> notesFlux = noteService.search(keyword);
+            Flux<Note> notesFlux = noteService.search(keyword, page, size);
 
             StepVerifier.create(notesFlux)
                     .expectComplete()

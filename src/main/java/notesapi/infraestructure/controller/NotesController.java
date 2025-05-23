@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import notesapi.application.dto.request.NoteRequest;
 import notesapi.application.dto.response.NoteResponse;
+import notesapi.application.dto.response.PaginatedResponse;
 import notesapi.application.service.NoteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,20 +42,39 @@ public class NotesController {
 
     @GetMapping
     @Operation(summary = "Get all notes")
-    public Mono<ResponseEntity<List<NoteResponse>>> getAllNotes() {
-        return noteService.findAll()
+    public Mono<ResponseEntity<PaginatedResponse>> getAllNotes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return noteService.findAll(page, size)
                 .map(NoteResponse::from)
                 .collectList()
-                .map(ResponseEntity::ok);
+                .zipWith(noteService.count())
+                .map(tuple -> {
+                    List<NoteResponse> notes = tuple.getT1();
+                    long totalItems = tuple.getT2();
+                    int totalPages = (int) Math.ceil((double) totalItems / size);
+                    return ResponseEntity.ok(new PaginatedResponse(notes, page, size, totalItems, totalPages));
+                });
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search note by keyword")
-    public Mono<ResponseEntity<List<NoteResponse>>> searchNotes(@RequestParam String keyword) {
-        return noteService.search(keyword)
+    public Mono<ResponseEntity<PaginatedResponse>> searchNotes(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return noteService.search(keyword, page, size)
                 .map(NoteResponse::from)
                 .collectList()
-                .map(ResponseEntity::ok);
+                .zipWith(noteService.countByKeyword(keyword))
+                .map(tuple -> {
+                    List<NoteResponse> notes = tuple.getT1();
+                    long totalItems = tuple.getT2();
+                    int totalPages = (int) Math.ceil((double) totalItems / size);
+                    return ResponseEntity.ok(new PaginatedResponse(notes, page, size, totalItems, totalPages));
+                });
     }
 
     @PostMapping

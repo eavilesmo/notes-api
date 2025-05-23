@@ -59,8 +59,8 @@ public class NotesControllerTest {
                         assertThat(response.title()).isEqualTo(ANY_TITLE);
                         assertThat(response.content()).isEqualTo(ANY_CONTENT);
                         assertThat(response.tags()).usingRecursiveComparison().isEqualTo(List.of(ANY_TAG));
-                        assertThat(response.createdAt()).isNotNull();
-                        assertThat(response.updatedAt()).isNotNull();
+                        assertThat(response.createdAt()).isInstanceOf(LocalDateTime.class);
+                        assertThat(response.updatedAt()).isInstanceOf(LocalDateTime.class);
                     });
         }
 
@@ -83,24 +83,30 @@ public class NotesControllerTest {
             Note savedNote = noteRepository.save(createNote()).block();
 
             webTestClient.get()
-                    .uri("/notes")
+                    .uri("/notes?page=0&size=10")
                     .exchange()
                     .expectStatus().isOk()
-                    .expectBodyList(NoteResponse.class)
-                    .hasSize(1)
-                    .value(notes -> {
-                        assertThat(notes.getFirst().id()).isEqualTo(savedNote.getId());
-                    });
+                    .expectBody()
+                    .jsonPath("$.items.length()").isEqualTo(1)
+                    .jsonPath("$.items[0].id").isEqualTo(savedNote.getId())
+                    .jsonPath("$.currentPage").isEqualTo(0)
+                    .jsonPath("$.pageSize").isEqualTo(10)
+                    .jsonPath("$.totalItems").isEqualTo(1)
+                    .jsonPath("$.totalPages").isEqualTo(1);
         }
 
         @Test
         void should_return_ok_when_there_are_no_notes() {
             webTestClient.get()
-                    .uri("/notes")
+                    .uri("/notes?page=0&size=10")
                     .exchange()
                     .expectStatus().isOk()
-                    .expectBodyList(NoteResponse.class)
-                    .hasSize(0);
+                    .expectBody()
+                    .jsonPath("$.items.length()").isEqualTo(0)
+                    .jsonPath("$.currentPage").isEqualTo(0)
+                    .jsonPath("$.pageSize").isEqualTo(10)
+                    .jsonPath("$.totalItems").isEqualTo(0)
+                    .jsonPath("$.totalPages").isEqualTo(0);
         }
     }
 
@@ -116,11 +122,17 @@ public class NotesControllerTest {
                     .uri(uriBuilder -> uriBuilder
                             .path("/notes/search")
                             .queryParam("keyword", keyword)
+                            .queryParam("page", 0)
+                            .queryParam("size", 10)
                             .build())
                     .exchange()
                     .expectStatus().isOk()
-                    .expectBodyList(NoteResponse.class)
-                    .hasSize(1);
+                    .expectBody()
+                    .jsonPath("$.items.length()").isEqualTo(1)
+                    .jsonPath("$.currentPage").isEqualTo(0)
+                    .jsonPath("$.pageSize").isEqualTo(10)
+                    .jsonPath("$.totalItems").isEqualTo(1)
+                    .jsonPath("$.totalPages").isEqualTo(1);
         }
 
         @Test
@@ -130,11 +142,17 @@ public class NotesControllerTest {
                     .uri(uriBuilder -> uriBuilder
                             .path("/notes/search")
                             .queryParam("keyword", keyword)
+                            .queryParam("page", 0)
+                            .queryParam("size", 10)
                             .build())
                     .exchange()
                     .expectStatus().isOk()
-                    .expectBodyList(NoteResponse.class)
-                    .hasSize(0);
+                    .expectBody()
+                    .jsonPath("$.items.length()").isEqualTo(0)
+                    .jsonPath("$.currentPage").isEqualTo(0)
+                    .jsonPath("$.pageSize").isEqualTo(10)
+                    .jsonPath("$.totalItems").isEqualTo(0)
+                    .jsonPath("$.totalPages").isEqualTo(0);
         }
     }
 
@@ -161,8 +179,8 @@ public class NotesControllerTest {
                         assertThat(savedNote.getTitle()).isEqualTo(title);
                         assertThat(savedNote.getContent()).isEqualTo(content);
                         assertThat(savedNote.getTags()).usingRecursiveComparison().isEqualTo(tags);
-                        assertThat(savedNote.getCreatedAt()).isNotNull();
-                        assertThat(savedNote.getUpdatedAt()).isNotNull();
+                        assertThat(savedNote.getCreatedAt()).isInstanceOf(LocalDateTime.class);
+                        assertThat(savedNote.getUpdatedAt()).isInstanceOf(LocalDateTime.class);
                     });
         }
     }

@@ -20,12 +20,16 @@ public class NoteService {
         return noteRepository.findById(id).switchIfEmpty(Mono.error(new NoteNotFoundException(id)));
     }
 
-    public Flux<Note> findAll() {
-        return noteRepository.findAll();
+    public Flux<Note> findAll(int page, int size) {
+        return noteRepository.findAll(page, size)
+                .skip((long) page * size)
+                .take(size);
     }
 
-    public Flux<Note> search(String keyword) {
-        return noteRepository.search(keyword);
+    public Flux<Note> search(String keyword, int page, int size) {
+        return noteRepository.search(keyword, page, size)
+                .skip((long) page * size)
+                .take(size);
     }
 
     public Mono<Note> create(Note note) {
@@ -57,5 +61,13 @@ public class NoteService {
         return noteRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NoteNotFoundException(id)))
                 .flatMap(note -> noteRepository.deleteById(note.getId()));
+    }
+
+    public Mono<Long> count() {
+        return noteRepository.count();
+    }
+
+    public Mono<Long> countByKeyword(String keyword) {
+        return noteRepository.countByKeyword(keyword);
     }
 }
