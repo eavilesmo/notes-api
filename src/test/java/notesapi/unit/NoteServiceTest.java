@@ -22,9 +22,12 @@ import java.util.List;
 
 import static notesapi.common.TestData.ANY_CONTENT;
 import static notesapi.common.TestData.ANY_ID;
+import static notesapi.common.TestData.ANY_KEYWORD;
 import static notesapi.common.TestData.ANY_OTHER_CONTENT;
 import static notesapi.common.TestData.ANY_OTHER_TAG;
 import static notesapi.common.TestData.ANY_OTHER_TITLE;
+import static notesapi.common.TestData.ANY_PAGE;
+import static notesapi.common.TestData.ANY_SIZE;
 import static notesapi.common.TestData.ANY_TAG;
 import static notesapi.common.TestData.ANY_TITLE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,11 +90,9 @@ public class NoteServiceTest {
         @Test
         void should_return_all_notes_paginated() {
             List<Note> notes = List.of(createNote());
-            int page = 0;
-            int size = 10;
-            when(noteRepository.findAll(page, size)).thenReturn(Flux.fromIterable(notes));
+            when(noteRepository.findAll(ANY_PAGE, ANY_SIZE)).thenReturn(Flux.fromIterable(notes));
 
-            Flux<Note> notesFlux = noteService.findAll(page, size);
+            Flux<Note> notesFlux = noteService.findAll(ANY_PAGE, ANY_SIZE);
 
             StepVerifier.create(notesFlux)
                     .expectNextSequence(notes)
@@ -100,11 +101,9 @@ public class NoteServiceTest {
 
         @Test
         void should_return_empty_paginated_when_there_are_no_notes() {
-            int page = 0;
-            int size = 10;
-            when(noteRepository.findAll(page, size)).thenReturn(Flux.empty());
+            when(noteRepository.findAll(ANY_PAGE, ANY_SIZE)).thenReturn(Flux.empty());
 
-            Flux<Note> notesFlux = noteService.findAll(page, size);
+            Flux<Note> notesFlux = noteService.findAll(ANY_PAGE, ANY_SIZE);
 
             StepVerifier.create(notesFlux)
                     .expectComplete()
@@ -118,12 +117,9 @@ public class NoteServiceTest {
         @Test
         void should_return_notes_when_searching_by_keyword_paginated() {
             List<Note> notes = List.of(createNote());
-            String keyword = "title";
-            int page = 0;
-            int size = 10;
-            when(noteRepository.search(keyword, page, size)).thenReturn(Flux.fromIterable(notes));
+            when(noteRepository.search(ANY_KEYWORD, ANY_PAGE, ANY_SIZE)).thenReturn(Flux.fromIterable(notes));
 
-            Flux<Note> notesFlux = noteService.search(keyword, page, size);
+            Flux<Note> notesFlux = noteService.search(ANY_KEYWORD, ANY_PAGE, ANY_SIZE);
 
             StepVerifier.create(notesFlux)
                     .expectNextSequence(notes)
@@ -132,12 +128,9 @@ public class NoteServiceTest {
 
         @Test
         void should_return_empty_when_no_search_results_paginated() {
-            String keyword = "title";
-            int page = 0;
-            int size = 10;
-            when(noteRepository.search(keyword, page, size)).thenReturn(Flux.empty());
+            when(noteRepository.search(ANY_KEYWORD, ANY_PAGE, ANY_SIZE)).thenReturn(Flux.empty());
 
-            Flux<Note> notesFlux = noteService.search(keyword, page, size);
+            Flux<Note> notesFlux = noteService.search(ANY_KEYWORD, ANY_PAGE, ANY_SIZE);
 
             StepVerifier.create(notesFlux)
                     .expectComplete()

@@ -9,4 +9,7 @@ public class TestData {
     public static final String ANY_OTHER_CONTENT = "any other content";
     public static final String ANY_TAG = "any tag";
     public static final String ANY_OTHER_TAG = "any other tag";
+    public static final String ANY_KEYWORD = "any keyword";
+    public static final int ANY_PAGE = 0;
+    public static final int ANY_SIZE = 10;
 }
